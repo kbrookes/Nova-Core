@@ -196,6 +196,14 @@ When adding new features or updates, use this format:
 - Status: ✅ Complete
 - Notes: Added required headers for automatic updates via Git Updater
 
+### Version 0.1.9 - [Current Date]
+- Feature/Change: Fixed tracking mode detection and label styling
+- Status: ✅ Complete
+- Notes: 
+  - Improved Zaraz detection to work with Cloudflare-loaded scripts
+  - Added red label color for disabled tracking mode
+  - Enhanced JavaScript-to-PHP communication for mode detection
+
 ## Admin Interface
 
 ### Settings Page
