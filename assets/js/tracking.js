@@ -2,6 +2,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const productionDomains = ['a-ha.com.au'];
     const isProduction = productionDomains.includes(window.location.hostname);
   
+    // Initialize tracking config if it doesn't exist
+    window.trackingConfig = window.trackingConfig || {};
+  
     function getTrackingMode() {
       const config = window.trackingConfig || {};
       if (typeof config.forceMode === 'string' && config.forceMode.length > 0) return config.forceMode;
@@ -10,8 +13,11 @@ document.addEventListener('DOMContentLoaded', function () {
       // Check for Zaraz
       if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
         // Notify PHP about Zaraz detection
-        if (typeof window.trackingConfig !== 'undefined') {
-          window.trackingConfig.detectedZaraz = true;
+        window.trackingConfig.detectedZaraz = true;
+        // Update the config in the DOM for PHP to read
+        const script = document.querySelector('script[data-tracking-config]');
+        if (script) {
+          script.textContent = 'window.trackingConfig = ' + JSON.stringify(window.trackingConfig) + ';';
         }
         return 'zaraz';
       }

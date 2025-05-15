@@ -19,11 +19,22 @@ function nova_core_get_current_tracking_mode() {
     $configured_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
     
     if ($configured_mode === 'auto') {
-        // Check for Zaraz in window object
-        if (wp_script_is('zaraz', 'registered') || wp_script_is('zaraz', 'enqueued') || 
-            (wp_script_is('nova-tracking', 'enqueued') && wp_script_is('nova-tracking', 'done'))) {
-            return 'zaraz';
+        // Check for Zaraz using a more reliable method
+        $script = wp_scripts()->query('nova-tracking');
+        if ($script && $script->done) {
+            // If our tracking script has loaded, check if Zaraz was detected
+            $inline_script = '';
+            foreach ($script->extra['data'] as $data) {
+                if (strpos($data, 'window.trackingConfig') !== false) {
+                    $inline_script = $data;
+                    break;
+                }
+            }
+            if (strpos($inline_script, '"detectedZaraz":true') !== false) {
+                return 'zaraz';
+            }
         }
+        
         // Check for Google Analytics
         if (wp_script_is('gtag', 'registered') || wp_script_is('gtag', 'enqueued')) {
             return 'gtag';

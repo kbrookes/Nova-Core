@@ -36,4 +36,7 @@ function nova_enqueue_tracking_script() {
         'mode' => $tracking_mode,
         'pageTitle' => nova_get_page_title()
     )) . ';', 'before');
+
+    // Add data attribute to script for config updates
+    wp_script_add_data('nova-tracking', 'data-tracking-config', '');
 }
