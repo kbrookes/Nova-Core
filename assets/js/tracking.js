@@ -12,13 +12,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     function getWPPageName() {
+      const config = window.trackingConfig || {};
+      if (config.pageTitle) return config.pageTitle;
+      
       const body = document.body;
       const match = [...body.classList].find(cls => cls.startsWith('page-name-'));
       if (match) return match.replace('page-name-', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       if (body.classList.contains('home')) return 'Home';
       if (body.classList.contains('blog')) return 'Blog';
       if (body.classList.contains('archive')) return 'Archive';
-      return document.title;
+      return 'Unknown Page';
     }
   
     function trackEvent(eventName, props) {
@@ -48,9 +51,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     // CLICK TRACKING
-    document.querySelectorAll('[data-plausible]').forEach(el => {
+    document.querySelectorAll('[data-click], [data-plausible]').forEach(el => {
       el.addEventListener('click', function () {
-        const eventName = el.getAttribute('data-plausible') || 'Unknown Button';
+        const eventName = el.getAttribute('data-click') || 
+                         el.getAttribute('data-plausible') || 
+                         'Unknown Button';
         const section = getSectionName(el);
         const page = getWPPageName();
         const props = { section, page };
