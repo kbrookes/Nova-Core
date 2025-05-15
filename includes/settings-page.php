@@ -19,8 +19,9 @@ function nova_core_get_current_tracking_mode() {
     $configured_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
     
     if ($configured_mode === 'auto') {
-        // Check for Zaraz
-        if (wp_script_is('zaraz', 'registered') || wp_script_is('zaraz', 'enqueued')) {
+        // Check for Zaraz in window object
+        if (wp_script_is('zaraz', 'registered') || wp_script_is('zaraz', 'enqueued') || 
+            (wp_script_is('nova-tracking', 'enqueued') && wp_script_is('nova-tracking', 'done'))) {
             return 'zaraz';
         }
         // Check for Google Analytics
@@ -213,11 +214,12 @@ function nova_core_tracking_section_callback() {
         'gtag' => 'Google Analytics',
         'none' => 'Disabled'
     );
+    $label_color = $current_mode === 'none' ? '#dc3232' : '#46b450';
     ?>
     <p>Configure how tracking is implemented on your site.</p>
     <p>
         <strong>Current Mode:</strong> 
-        <span style="display: inline-block; padding: 3px 8px; background: #46b450; color: white; border-radius: 3px;">
+        <span style="display: inline-block; padding: 3px 8px; background: <?php echo esc_attr($label_color); ?>; color: white; border-radius: 3px;">
             <?php echo esc_html($mode_labels[$current_mode]); ?>
         </span>
     </p>

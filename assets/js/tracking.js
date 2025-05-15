@@ -6,7 +6,17 @@ document.addEventListener('DOMContentLoaded', function () {
       const config = window.trackingConfig || {};
       if (typeof config.forceMode === 'string' && config.forceMode.length > 0) return config.forceMode;
       if (config.autodetect === false) return 'none';
-      if (typeof zaraz !== 'undefined' && typeof zaraz.track === 'function') return 'zaraz';
+      
+      // Check for Zaraz
+      if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
+        // Notify PHP about Zaraz detection
+        if (typeof window.trackingConfig !== 'undefined') {
+          window.trackingConfig.detectedZaraz = true;
+        }
+        return 'zaraz';
+      }
+      
+      // Check for Google Analytics
       if (typeof gtag === 'function') return 'gtag';
       return 'none';
     }
