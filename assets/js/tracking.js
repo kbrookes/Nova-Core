@@ -6,6 +6,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};
   
+    /**
+     * TODO: Zaraz Detection Issue
+     * Current detection methods are not reliably detecting Zaraz on production sites
+     * where Zaraz is configured via Cloudflare and disabled for logged-in users.
+     * 
+     * Investigation needed:
+     * 1. Verify Zaraz configuration in Cloudflare
+     * 2. Check how Zaraz is being loaded/disabled
+     * 3. Consider alternative detection methods
+     * 4. Test with different user states (logged in/out)
+     */
     function detectZaraz() {
         // Method 1: Check for zaraz object (when enabled)
         if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
@@ -104,7 +115,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const props = { section, page };
   
         if (isProduction) {
-          if (typeof plausible === 'function') plausible(eventName, { props });
+          // Format event name for Plausible: "Event Name - Section - Page"
+          const plausibleEventName = `${eventName} - ${section} - ${page}`;
+          if (typeof plausible === 'function') plausible(plausibleEventName, { props });
           trackEvent(eventName, props);
         } else {
           console.info('Staging mode → click event suppressed:', Object.assign({ event: eventName }, props));

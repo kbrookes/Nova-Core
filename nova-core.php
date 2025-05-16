@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.11
+ * Version: 0.1.12
  * Author: Nova Strategic
  * GitHub Plugin URI: https://github.com/kbrookes/Nova-Core
  * Primary Branch: main

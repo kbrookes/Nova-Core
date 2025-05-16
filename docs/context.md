@@ -50,6 +50,7 @@ Nova Core provides shared functionality across all Nova Strategic websites. It i
 3. Tracking settings (mode, domain) hardcoded in script — needs GUI config
 4. Lacks test automation and WP CLI integration
 5. No caching or performance profiling done yet
+6. Zaraz auto-detection not working reliably on production sites with Cloudflare rules
 
 ---
 
@@ -203,6 +204,34 @@ When adding new features or updates, use this format:
   - Improved Zaraz detection to work with Cloudflare-loaded scripts
   - Added red label color for disabled tracking mode
   - Enhanced JavaScript-to-PHP communication for mode detection
+
+### Version 0.1.10 - [Current Date]
+- Feature/Change: Enhanced tracking interface and environment controls
+- Status: 🚧 In Progress
+- Notes: 
+  - Added environment selection (Development/Production)
+  - Added global tracking toggle
+  - Improved mode selector and status display
+  - Known issue: Zaraz auto-detection not working reliably on production sites with Cloudflare rules
+  - TODO: Investigate and fix Zaraz detection when disabled via Cloudflare rules
+
+### Version 0.1.11 - [Current Date]
+- Feature/Change: Improved Plausible event naming
+- Status: ✅ Complete
+- Notes: 
+  - Updated Plausible event names to show actual click event name
+  - Format changed to "Event Name - Section - Page"
+  - Maintains original event name for other tracking methods
+  - Uses WordPress page name instead of SEO title
+
+### Version 0.1.12 - [Current Date]
+- Feature/Change: Improved Plausible event naming
+- Status: ✅ Complete
+- Notes: 
+  - Updated Plausible event names to show actual click event name
+  - Format changed to "Event Name - Section - Page"
+  - Maintains original event name for other tracking methods
+  - Uses WordPress page name instead of SEO title
 
 ## Admin Interface
 

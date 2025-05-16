@@ -23,6 +23,16 @@ function nova_enqueue_tracking_script() {
     $environment = isset($options['environment']) ? $options['environment'] : 'production';
     $tracking_enabled = isset($options['tracking_enabled']) ? $options['tracking_enabled'] : 1;
 
+    /**
+     * TODO: Zaraz Detection Issue
+     * The current auto-detection of Zaraz is not working reliably on production sites
+     * where Zaraz is configured via Cloudflare and disabled for logged-in users.
+     * 
+     * This affects the tracking mode detection in the admin interface and may
+     * cause incorrect status reporting. Manual mode selection may be required
+     * until this is resolved.
+     */
+
     wp_enqueue_script(
         'nova-tracking',
         plugin_dir_url(__FILE__) . '../assets/js/tracking.js',
