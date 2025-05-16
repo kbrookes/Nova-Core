@@ -6,13 +6,39 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};
   
+    function detectZaraz() {
+        // Method 1: Check for zaraz object (when enabled)
+        if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
+            return true;
+        }
+
+        // Method 2: Check for zaraz script tag
+        const zarazScript = document.querySelector('script[src*="zaraz"]');
+        if (zarazScript) {
+            return true;
+        }
+
+        // Method 3: Check for zaraz cookie
+        if (document.cookie.includes('_zaraz')) {
+            return true;
+        }
+
+        // Method 4: Check for zaraz meta tag
+        const zarazMeta = document.querySelector('meta[name="zaraz"]');
+        if (zarazMeta) {
+            return true;
+        }
+
+        return false;
+    }
+  
     function getTrackingMode() {
       if (!trackingEnabled) return 'none';
       if (typeof config.forceMode === 'string' && config.forceMode.length > 0) return config.forceMode;
       if (config.autodetect === false) return 'none';
       
-      // Check for Zaraz
-      if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
+      // Check for Zaraz using multiple detection methods
+      if (detectZaraz()) {
         // Notify PHP about Zaraz detection
         window.trackingConfig.detectedZaraz = true;
         // Update the config in the DOM for PHP to read
