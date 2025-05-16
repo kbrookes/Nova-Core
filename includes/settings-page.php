@@ -218,23 +218,26 @@ function nova_core_settings_page() {
 
 // Section callbacks
 function nova_core_tracking_section_callback() {
+    $options = get_option('nova_core_tracking_options');
     $current_mode = nova_core_get_current_tracking_mode();
-    $mode_labels = array(
-        'auto' => 'Auto-detect',
-        'zaraz' => 'Zaraz',
-        'gtag' => 'Google Analytics',
-        'none' => 'Disabled'
-    );
-    $label_color = $current_mode === 'none' ? '#dc3232' : '#46b450';
-    ?>
-    <p>Configure how tracking is implemented on your site.</p>
-    <p>
-        <strong>Current Mode:</strong> 
-        <span style="display: inline-block; padding: 3px 8px; background: <?php echo esc_attr($label_color); ?>; color: white; border-radius: 3px;">
-            <?php echo esc_html($mode_labels[$current_mode]); ?>
-        </span>
-    </p>
-    <?php
+    $is_auto = isset($options['tracking_mode']) && $options['tracking_mode'] === 'auto';
+    
+    // Only show current mode if auto-detect is enabled
+    if ($is_auto) {
+        $detection_status = $current_mode === 'none' ? 'failed' : 'success';
+        $status_color = $detection_status === 'failed' ? '#dc3232' : '#46b450';
+        ?>
+        <p>Configure how tracking is implemented on your site.</p>
+        <p>
+            <strong>Auto-Detect Status:</strong> 
+            <span style="display: inline-block; padding: 3px 8px; background: <?php echo esc_attr($status_color); ?>; color: white; border-radius: 3px;">
+                <?php echo $detection_status === 'failed' ? 'No tracking detected' : 'Tracking detected'; ?>
+            </span>
+        </p>
+        <?php
+    } else {
+        echo '<p>Configure how tracking is implemented on your site.</p>';
+    }
 }
 
 function nova_core_features_section_callback() {
@@ -245,14 +248,66 @@ function nova_core_features_section_callback() {
 function nova_core_tracking_mode_callback() {
     $options = get_option('nova_core_tracking_options');
     $tracking_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
+    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+    $tracking_enabled = isset($options['tracking_enabled']) ? $options['tracking_enabled'] : 1;
     ?>
-    <select name="nova_core_tracking_options[tracking_mode]">
-        <option value="auto" <?php selected($tracking_mode, 'auto'); ?>>Auto-detect</option>
-        <option value="zaraz" <?php selected($tracking_mode, 'zaraz'); ?>>Zaraz</option>
-        <option value="gtag" <?php selected($tracking_mode, 'gtag'); ?>>Google Analytics</option>
-        <option value="none" <?php selected($tracking_mode, 'none'); ?>>Disabled</option>
-    </select>
-    <p class="description">Choose how tracking should be implemented. Auto-detect will attempt to use the best available option.</p>
+    <div class="nova-core-tracking-settings">
+        <div class="nova-core-setting-row">
+            <label>
+                <strong>Environment:</strong>
+                <select name="nova_core_tracking_options[environment]">
+                    <option value="production" <?php selected($environment, 'production'); ?>>Production</option>
+                    <option value="development" <?php selected($environment, 'development'); ?>>Development</option>
+                </select>
+            </label>
+            <p class="description">Select whether this is a production or development environment.</p>
+        </div>
+
+        <div class="nova-core-setting-row">
+            <label>
+                <strong>Global Tracking:</strong>
+                <input type="checkbox" name="nova_core_tracking_options[tracking_enabled]" value="1" <?php checked($tracking_enabled, 1); ?>>
+                Enable tracking
+            </label>
+            <p class="description">When disabled, no tracking will be implemented regardless of other settings.</p>
+        </div>
+
+        <div class="nova-core-setting-row">
+            <label>
+                <strong>Tracking Mode:</strong>
+                <select name="nova_core_tracking_options[tracking_mode]">
+                    <option value="auto" <?php selected($tracking_mode, 'auto'); ?>>Auto-detect</option>
+                    <option value="zaraz" <?php selected($tracking_mode, 'zaraz'); ?>>Zaraz</option>
+                    <option value="gtag" <?php selected($tracking_mode, 'gtag'); ?>>Google Analytics</option>
+                </select>
+            </label>
+            <p class="description">Choose how tracking should be implemented. Auto-detect will attempt to use the best available option.</p>
+        </div>
+    </div>
+
+    <style>
+        .nova-core-tracking-settings {
+            max-width: 600px;
+        }
+        .nova-core-setting-row {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .nova-core-setting-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .nova-core-setting-row label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .nova-core-setting-row select,
+        .nova-core-setting-row input[type="checkbox"] {
+            margin-top: 5px;
+        }
+    </style>
     <?php
 }
 

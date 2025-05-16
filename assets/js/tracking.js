@@ -1,12 +1,13 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const productionDomains = ['a-ha.com.au'];
-    const isProduction = productionDomains.includes(window.location.hostname);
+    const config = window.trackingConfig || {};
+    const isProduction = config.environment === 'production';
+    const trackingEnabled = config.trackingEnabled !== false;
   
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};
   
     function getTrackingMode() {
-      const config = window.trackingConfig || {};
+      if (!trackingEnabled) return 'none';
       if (typeof config.forceMode === 'string' && config.forceMode.length > 0) return config.forceMode;
       if (config.autodetect === false) return 'none';
       

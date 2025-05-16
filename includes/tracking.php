@@ -20,6 +20,8 @@ add_action('wp_enqueue_scripts', 'nova_enqueue_tracking_script');
 function nova_enqueue_tracking_script() {
     $options = get_option('nova_core_tracking_options');
     $tracking_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
+    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+    $tracking_enabled = isset($options['tracking_enabled']) ? $options['tracking_enabled'] : 1;
 
     wp_enqueue_script(
         'nova-tracking',
@@ -34,7 +36,9 @@ function nova_enqueue_tracking_script() {
         'autodetect' => $tracking_mode === 'auto',
         'forceMode' => $tracking_mode === 'auto' ? '' : $tracking_mode,
         'mode' => $tracking_mode,
-        'pageTitle' => nova_get_page_title()
+        'pageTitle' => nova_get_page_title(),
+        'environment' => $environment,
+        'trackingEnabled' => (bool)$tracking_enabled
     )) . ';', 'before');
 
     // Add data attribute to script for config updates
