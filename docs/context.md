@@ -243,6 +243,21 @@ When adding new features or updates, use this format:
   - Fields only register when Case Studies feature is enabled
   - Maintained all original field keys and settings from ACF export
 
+### Version 0.1.16 - [Current Date]
+- Feature/Change: Added Pro Site Settings options page and ACF fields
+- Status: ✅ Complete
+- Notes: 
+  - Added new options page under Settings menu
+  - Implemented comprehensive site settings fields including:
+    - Your Details (name, contact info, headshot)
+    - Credibility Center (heading, text, CTA)
+    - Footer Contact Details (address, phone, email, business info)
+    - Benefits Section (title, intro, repeater field for benefits)
+    - Blog Setup (hero image, title, headline)
+  - All fields organized in tabs for better usability
+  - Fields registered via PHP for better version control
+  - Maintained all original field keys and settings
+
 ## Admin Interface
 
 ### Settings Page

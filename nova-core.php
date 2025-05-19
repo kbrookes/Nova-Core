@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.15
+ * Version: 0.1.16
  * Author: Nova Strategic
  * GitHub Plugin URI: https://github.com/kbrookes/Nova-Core
  * Primary Branch: main
@@ -22,3 +22,4 @@ require_once __DIR__ . '/includes/acf-fields.php';
 require_once __DIR__ . '/includes/utils.php';
 require_once __DIR__ . '/includes/settings-page.php';
 require_once __DIR__ . '/includes/zaraz-cookie.php';
+require_once __DIR__ . '/includes/site-settings.php';
