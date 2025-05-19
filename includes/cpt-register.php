@@ -62,7 +62,7 @@ function nova_core_register_case_studies() {
         'menu_position'      => '',
         'menu_icon'          => 'dashicons-archive',
         'capability_type'    => 'post',
-        'supports'           => array('title', 'editor', 'excerpt', 'thumbnail'),
+        'supports'           => array('title', 'excerpt', 'thumbnail'),
         'taxonomies'         => array('category', 'post_tag', 'service'),
         'has_archive'        => true,
         'rewrite'            => array(
