@@ -33,14 +33,14 @@ function nova_core_register_case_studies_fields() {
                 'label' => 'Full Name',
                 'name' => 'cs_fullname',
                 'type' => 'text',
-                'default_value' => 'Provide a single compelling statement that can headline your C.A.S.E.',
+                'default_value' => 'If wanted, provide the full name of the person who is featured in the case study.',
             ),
             array(
                 'key' => 'field_65161a8e878cf',
                 'label' => 'Company Name',
                 'name' => 'cs_companyname',
                 'type' => 'text',
-                'default_value' => 'Provide a single compelling statement that can headline your C.A.S.E.',
+                'default_value' => 'If wanted, provide the name of the company featured in the case study.',
             ),
             array(
                 'key' => 'field_645b04de5db6b',
