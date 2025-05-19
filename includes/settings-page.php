@@ -51,6 +51,7 @@ function nova_core_register_settings() {
     // Register option groups
     register_setting('nova_core_tracking_settings', 'nova_core_tracking_options');
     register_setting('nova_core_features_settings', 'nova_core_features_options');
+    register_setting('nova_core_blog_settings', 'nova_core_blog_options');
 
     // Tracking Settings
     add_settings_section(
@@ -115,6 +116,46 @@ function nova_core_register_settings() {
         'nova-core-features',
         'nova_core_features_section'
     );
+
+    // Blog Settings
+    add_settings_section(
+        'nova_core_blog_section',
+        'Blog Settings',
+        'nova_core_blog_section_callback',
+        'nova-core-blog'
+    );
+
+    add_settings_field(
+        'blog_posts_per_page',
+        'Posts Per Page',
+        'nova_core_blog_posts_per_page_callback',
+        'nova-core-blog',
+        'nova_core_blog_section'
+    );
+
+    add_settings_field(
+        'blog_excerpt_length',
+        'Excerpt Length',
+        'nova_core_blog_excerpt_length_callback',
+        'nova-core-blog',
+        'nova_core_blog_section'
+    );
+
+    add_settings_field(
+        'blog_show_author',
+        'Show Author',
+        'nova_core_blog_show_author_callback',
+        'nova-core-blog',
+        'nova_core_blog_section'
+    );
+
+    add_settings_field(
+        'blog_show_date',
+        'Show Date',
+        'nova_core_blog_show_date_callback',
+        'nova-core-blog',
+        'nova_core_blog_section'
+    );
 }
 
 // Settings page callback
@@ -141,6 +182,10 @@ function nova_core_settings_page() {
                class="nav-tab <?php echo $active_tab == 'instructions' ? 'nav-tab-active' : ''; ?>">
                 Instructions
             </a>
+            <a href="?page=nova-core-settings&tab=blog" 
+               class="nav-tab <?php echo $active_tab == 'blog' ? 'nav-tab-active' : ''; ?>">
+                Blog Settings
+            </a>
         </h2>
 
         <?php if ($active_tab == 'tracking'): ?>
@@ -157,6 +202,14 @@ function nova_core_settings_page() {
                 settings_fields('nova_core_features_settings');
                 do_settings_sections('nova-core-features');
                 submit_button('Save Feature Settings');
+                ?>
+            </form>
+        <?php elseif ($active_tab == 'blog'): ?>
+            <form action="options.php" method="post">
+                <?php
+                settings_fields('nova_core_blog_settings');
+                do_settings_sections('nova-core-blog');
+                submit_button('Save Blog Settings');
                 ?>
             </form>
         <?php else: ?>
@@ -375,5 +428,46 @@ function nova_core_enable_testimonials_callback() {
     ?>
     <input type="checkbox" name="nova_core_features_options[enable_testimonials]" value="1" <?php checked(1, $enabled); ?> />
     <p class="description">Enable the Testimonials custom post type.</p>
+    <?php
+}
+
+// Add new callback functions at the end of the file
+function nova_core_blog_section_callback() {
+    echo '<p>Configure your blog display settings.</p>';
+}
+
+function nova_core_blog_posts_per_page_callback() {
+    $options = get_option('nova_core_blog_options');
+    $value = isset($options['posts_per_page']) ? $options['posts_per_page'] : 10;
+    ?>
+    <input type="number" name="nova_core_blog_options[posts_per_page]" value="<?php echo esc_attr($value); ?>" min="1" max="100" />
+    <p class="description">Number of posts to display per page on the blog archive.</p>
+    <?php
+}
+
+function nova_core_blog_excerpt_length_callback() {
+    $options = get_option('nova_core_blog_options');
+    $value = isset($options['excerpt_length']) ? $options['excerpt_length'] : 55;
+    ?>
+    <input type="number" name="nova_core_blog_options[excerpt_length]" value="<?php echo esc_attr($value); ?>" min="10" max="200" />
+    <p class="description">Number of words to show in post excerpts.</p>
+    <?php
+}
+
+function nova_core_blog_show_author_callback() {
+    $options = get_option('nova_core_blog_options');
+    $value = isset($options['show_author']) ? $options['show_author'] : 1;
+    ?>
+    <input type="checkbox" name="nova_core_blog_options[show_author]" value="1" <?php checked(1, $value); ?> />
+    <p class="description">Display the author name on blog posts.</p>
+    <?php
+}
+
+function nova_core_blog_show_date_callback() {
+    $options = get_option('nova_core_blog_options');
+    $value = isset($options['show_date']) ? $options['show_date'] : 1;
+    ?>
+    <input type="checkbox" name="nova_core_blog_options[show_date]" value="1" <?php checked(1, $value); ?> />
+    <p class="description">Display the post date on blog posts.</p>
     <?php
 }

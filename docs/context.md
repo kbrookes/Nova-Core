@@ -258,6 +258,20 @@ When adding new features or updates, use this format:
   - Fields registered via PHP for better version control
   - Maintained all original field keys and settings
 
+### Version 0.1.17 - [Current Date]
+- Feature/Change: Added Blog Settings tab to Nova Core settings
+- Status: ✅ Complete
+- Notes: 
+  - Added new Blog Settings tab in the admin interface
+  - Implemented settings for:
+    - Posts per page (1-100)
+    - Excerpt length (10-200 words)
+    - Author display toggle
+    - Date display toggle
+  - Settings stored in `nova_core_blog_options`
+  - All settings have descriptive help text
+  - Default values set for all options
+
 ## Admin Interface
 
 ### Settings Page
