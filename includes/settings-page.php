@@ -80,7 +80,7 @@ function nova_core_register_settings() {
         'enable_page_types',
         'Page Types',
         'nova_core_enable_page_types_callback',
-        'nova-core-tracking',
+        'nova-core-features',
         'nova_core_features_section'
     );
 
@@ -88,7 +88,7 @@ function nova_core_register_settings() {
         'enable_services',
         'Services',
         'nova_core_enable_services_callback',
-        'nova-core-tracking',
+        'nova-core-features',
         'nova_core_features_section'
     );
 
@@ -96,7 +96,7 @@ function nova_core_register_settings() {
         'enable_resources',
         'Resources',
         'nova_core_enable_resources_callback',
-        'nova-core-tracking',
+        'nova-core-features',
         'nova_core_features_section'
     );
 
@@ -104,7 +104,7 @@ function nova_core_register_settings() {
         'enable_case_studies',
         'Case Studies',
         'nova_core_enable_case_studies_callback',
-        'nova-core-tracking',
+        'nova-core-features',
         'nova_core_features_section'
     );
 }
