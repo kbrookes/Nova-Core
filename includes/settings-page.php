@@ -99,6 +99,14 @@ function nova_core_register_settings() {
         'nova-core-tracking',
         'nova_core_features_section'
     );
+
+    add_settings_field(
+        'enable_case_studies',
+        'Case Studies',
+        'nova_core_enable_case_studies_callback',
+        'nova-core-tracking',
+        'nova_core_features_section'
+    );
 }
 
 // Settings page callback
@@ -340,6 +348,17 @@ function nova_core_enable_resources_callback() {
     <label>
         <input type="checkbox" name="nova_core_features_options[enable_resources]" value="1" <?php checked($enabled, 1); ?>>
         Enable Resources custom post type
+    </label>
+    <?php
+}
+
+function nova_core_enable_case_studies_callback() {
+    $options = get_option('nova_core_features_options');
+    $enabled = isset($options['enable_case_studies']) ? $options['enable_case_studies'] : false;
+    ?>
+    <label>
+        <input type="checkbox" name="nova_core_features_options[enable_case_studies]" value="1" <?php checked($enabled); ?>>
+        Enable Case Studies post type
     </label>
     <?php
 }
