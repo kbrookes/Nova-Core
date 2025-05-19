@@ -1,6 +1,6 @@
 # Nova Core Plugin – Development Context
 
-## Current Version: 0.1.0 (Plugin Scaffold)
+## Current Version: 0.1.15 (Plugin Scaffold)
 
 ---
 
@@ -232,6 +232,16 @@ When adding new features or updates, use this format:
   - Format changed to "Event Name - Section - Page"
   - Maintains original event name for other tracking methods
   - Uses WordPress page name instead of SEO title
+
+### Version 0.1.13 - [Current Date]
+- Feature/Change: Added Case Studies ACF fields registration
+- Status: ✅ Complete
+- Notes: 
+  - Implemented ACF fields for Case Studies post type
+  - Fields organized into tabs: Client Info, Challenge, Approach, Solution, Experience, and Testimonial
+  - Added testimonial relationship field to link case studies with testimonials
+  - Fields only register when Case Studies feature is enabled
+  - Maintained all original field keys and settings from ACF export
 
 ## Admin Interface
 

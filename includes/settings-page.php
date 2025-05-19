@@ -107,6 +107,14 @@ function nova_core_register_settings() {
         'nova-core-features',
         'nova_core_features_section'
     );
+
+    add_settings_field(
+        'enable_testimonials',
+        'Testimonials',
+        'nova_core_enable_testimonials_callback',
+        'nova-core-features',
+        'nova_core_features_section'
+    );
 }
 
 // Settings page callback
@@ -356,9 +364,16 @@ function nova_core_enable_case_studies_callback() {
     $options = get_option('nova_core_features_options');
     $enabled = isset($options['enable_case_studies']) ? $options['enable_case_studies'] : false;
     ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[enable_case_studies]" value="1" <?php checked($enabled); ?>>
-        Enable Case Studies post type
-    </label>
+    <input type="checkbox" name="nova_core_features_options[enable_case_studies]" value="1" <?php checked(1, $enabled); ?> />
+    <p class="description">Enable the Case Studies custom post type.</p>
+    <?php
+}
+
+function nova_core_enable_testimonials_callback() {
+    $options = get_option('nova_core_features_options');
+    $enabled = isset($options['enable_testimonials']) ? $options['enable_testimonials'] : false;
+    ?>
+    <input type="checkbox" name="nova_core_features_options[enable_testimonials]" value="1" <?php checked(1, $enabled); ?> />
+    <p class="description">Enable the Testimonials custom post type.</p>
     <?php
 }
