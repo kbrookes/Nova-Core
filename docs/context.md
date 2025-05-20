@@ -272,6 +272,17 @@ When adding new features or updates, use this format:
   - All settings have descriptive help text
   - Default values set for all options
 
+### Version 0.1.18 - [Current Date]
+- Feature/Change: Added rich editor support for category descriptions
+- Status: ✅ Complete
+- Notes: 
+  - Added utility function to enable WordPress rich editor for category descriptions
+  - Removed default HTML stripping filters
+  - Added full editor with media buttons and quicktags
+  - Editor height set to 300px for better usability
+  - Maintains proper HTML encoding/decoding
+  - Added descriptive help text
+
 ## Admin Interface
 
 ### Settings Page
