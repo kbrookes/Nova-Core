@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
     observedSections.forEach(section => observer.observe(section));
   
     // MENU ITEM CLICK TRACKING
-    document.querySelectorAll('nav a, .menu a, .main-menu a, .bricks-nav-menu-wrapper a').forEach(link => {
+    document.querySelectorAll('nav a:not([data-click]):not([data-plausible]), .menu a:not([data-click]):not([data-plausible]), .main-menu a:not([data-click]):not([data-plausible]), .bricks-nav-menu-wrapper a:not([data-click]):not([data-plausible])').forEach(link => {
       link.addEventListener('click', function () {
         const eventName = 'Menu Click';
         const section = getSectionName(link);
