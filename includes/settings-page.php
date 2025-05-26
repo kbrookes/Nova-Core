@@ -231,27 +231,51 @@ function nova_core_settings_page() {
                 <div class="nova-core-code-block">
                     <pre><code>(http.request.uri contains "wp-login.php") or 
 (http.request.uri.path contains "wp-admin") or 
-(http.cookie contains "nova_zaraz_logged_in=true")</code></pre>
+(http.cookie contains "wordpress_logged_in")</code></pre>
                 </div>
 
-                <p>To implement this filter:</p>
-                <ol>
-                    <li>In Cloudflare, go to <strong>Zaraz</strong> > <strong>Settings</strong></li>
-                    <li>Under <strong>Configuration Rules</strong>, click <strong>Add Rule</strong></li>
-                    <li>Name the rule (e.g., "Exclude Admin Users")</li>
-                    <li>Paste the filter expression above</li>
-                    <li>Set the action to <strong>Disable Zaraz</strong> (this will completely disable Zaraz tracking when the expression is true)</li>
-                    <li>Save the rule</li>
-                </ol>
+                <div class="nova-core-note">
+                    <strong>Important:</strong> When creating the rule in Cloudflare, use the "Disable Zaraz" action instead of "Block" to ensure proper functionality.
+                </div>
+
+                <h2>Tracking Implementation Guide</h2>
+
+                <h3>Section Tracking</h3>
+                <p>To track sections on your page, add a <code>data-name</code> attribute to your section elements:</p>
+                <div class="nova-core-code-block">
+                    <pre><code>&lt;section data-name="Hero Section"&gt;
+    // Section content
+&lt;/section&gt;</code></pre>
+                </div>
+                <p>The section name will be automatically tracked when it comes into view. If no <code>data-name</code> is provided, the system will try to use the section's ID or classes.</p>
+
+                <h3>Click Tracking</h3>
+                <p>To track clicks on elements, add a <code>data-click</code> attribute with the event name:</p>
+                <div class="nova-core-code-block">
+                    <pre><code>&lt;button data-click="Book Consultation"&gt;Book Now&lt;/button&gt;
+&lt;a href="#" data-click="Download Guide"&gt;Download Guide&lt;/a&gt;</code></pre>
+                </div>
+                <p>The click event will be tracked with the following properties:</p>
+                <ul>
+                    <li>Event Name: The value of <code>data-click</code></li>
+                    <li>Section: The parent section where the click occurred</li>
+                    <li>Page: The current WordPress page name</li>
+                </ul>
+
+                <h3>Fluent Form Tracking</h3>
+                <p>To track Fluent Form submissions, add a hidden field to your form with the event name:</p>
+                <div class="nova-core-code-block">
+                    <pre><code>&lt;input type="hidden" name="ff_event_name" value="Contact Form Submitted"&gt;</code></pre>
+                </div>
+                <p>The form submission will be tracked with:</p>
+                <ul>
+                    <li>Event Name: The value of the hidden field</li>
+                    <li>Section: The parent section containing the form</li>
+                    <li>Page: The current WordPress page name</li>
+                </ul>
 
                 <div class="nova-core-note">
-                    <p><strong>Note:</strong> This configuration will prevent tracking of:</p>
-                    <ul>
-                        <li>WordPress login page visitors</li>
-                        <li>WordPress admin area visitors</li>
-                        <li>Logged-in administrators (via the <code>nova_zaraz_logged_in</code> cookie)</li>
-                    </ul>
-                    <p><strong>Important:</strong> Make sure to set the action to "Disable Zaraz" rather than "Block" - this ensures Zaraz is completely disabled for these users rather than just blocking specific events.</p>
+                    <strong>Note:</strong> All tracking events are automatically suppressed in development mode and will only be logged to the console for testing purposes.
                 </div>
             </div>
 

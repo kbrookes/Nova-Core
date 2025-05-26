@@ -176,11 +176,11 @@ document.addEventListener('DOMContentLoaded', function () {
     observedSections.forEach(section => observer.observe(section));
   
     // MENU ITEM CLICK TRACKING
-    document.querySelectorAll('nav a, .menu a, .main-menu a').forEach(link => {
+    document.querySelectorAll('nav a, .menu a, .main-menu a, .bricks-nav-menu-wrapper a').forEach(link => {
       link.addEventListener('click', function () {
         const eventName = 'Menu Click';
         const section = getSectionName(link);
-        const menuContainer = link.closest('nav, ul');
+        const menuContainer = link.closest('nav, ul, .bricks-nav-menu-wrapper');
         const menu = menuContainer
           ? menuContainer.getAttribute('id') ||
             Array.from(menuContainer.classList).join(' ') ||
@@ -189,7 +189,19 @@ document.addEventListener('DOMContentLoaded', function () {
   
         const label = link.textContent.trim() || link.getAttribute('href') || 'Unnamed Link';
         const page = getWPPageName();
-        const props = { section, menu, label, page };
+        
+        // Check if menu is in header or footer
+        const location = link.closest('header') ? 'header' : 
+                        link.closest('footer') ? 'footer' : 
+                        'main';
+        
+        const props = { 
+          section, 
+          menu, 
+          label, 
+          page,
+          location 
+        };
   
         if (isProduction) {
           if (typeof plausible === 'function') plausible(eventName, { props });
