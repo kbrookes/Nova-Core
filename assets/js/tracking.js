@@ -96,13 +96,77 @@ document.addEventListener('DOMContentLoaded', function () {
   
     function getSectionName(el) {
       const section = el.closest('section');
-      return section
-        ? section.getAttribute('data-name') ||
-          section.getAttribute('id') ||
-          Array.from(section.classList).join(' ') ||
-          'Unnamed Section'
-        : 'Global (no section)';
+      if (!section) return 'Global (no section)';
+
+      // Check if section has data-track-inside attribute
+      if (section.hasAttribute('data-track-inside')) {
+        // Find the closest element with data-name inside the section
+        const namedElement = el.closest('[data-name]');
+        if (namedElement && section.contains(namedElement)) {
+          return namedElement.getAttribute('data-name');
+        }
+      }
+
+      // Fall back to original behavior
+      return section.getAttribute('data-name') ||
+             section.getAttribute('id') ||
+             Array.from(section.classList).join(' ') ||
+             'Unnamed Section';
     }
+  
+    // SCROLL TRACKING
+    const trackedSections = [];
+    const observedSections = document.querySelectorAll(
+      'main > section:not(.no-scroll-track), main > .brxe-template > section:not(.no-scroll-track), footer'
+    );
+  
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const sec = entry.target;
+          
+          // Check if this is a data-track-inside section
+          if (sec.hasAttribute('data-track-inside')) {
+            // Find all elements with data-name inside this section
+            const namedElements = sec.querySelectorAll('[data-name]');
+            namedElements.forEach(namedEl => {
+              const section = namedEl.getAttribute('data-name');
+              if (!trackedSections.includes(section)) {
+                trackedSections.push(section);
+                const props = { section, page: getWPPageName() };
+                const eventName = 'Viewed Section';
+  
+                if (isProduction) {
+                  trackEvent(eventName, props);
+                } else {
+                  console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
+                }
+              }
+            });
+          } else {
+            // Original behavior for regular sections
+            const section = sec.getAttribute('data-name') ||
+                          sec.getAttribute('id') ||
+                          Array.from(sec.classList).join(' ') ||
+                          'Unnamed Section';
+  
+            if (!trackedSections.includes(section)) {
+              trackedSections.push(section);
+              const props = { section, page: getWPPageName() };
+              const eventName = 'Viewed Section';
+  
+              if (isProduction) {
+                trackEvent(eventName, props);
+              } else {
+                console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
+              }
+            }
+          }
+        }
+      });
+    }, { threshold: 0.25 });
+  
+    observedSections.forEach(section => observer.observe(section));
   
     // CLICK TRACKING
     document.querySelectorAll('[data-click], [data-plausible]').forEach(el => {
@@ -110,7 +174,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const eventName = el.getAttribute('data-click') || 
                          el.getAttribute('data-plausible') || 
                          'Unknown Button';
-        const section = getSectionName(el);
+        
+        // Get the section name, handling data-track-inside
+        let section;
+        const parentSection = el.closest('section');
+        if (parentSection && parentSection.hasAttribute('data-track-inside')) {
+          const namedElement = el.closest('[data-name]');
+          if (namedElement && parentSection.contains(namedElement)) {
+            section = namedElement.getAttribute('data-name');
+          }
+        }
+        if (!section) {
+          section = getSectionName(el);
+        }
+
         const page = getWPPageName();
         const props = { section, page };
   
@@ -142,38 +219,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
       });
     });
-  
-    // SCROLL TRACKING
-    const trackedSections = [];
-    const observedSections = document.querySelectorAll(
-      'main > section:not(.no-scroll-track), main > .brxe-template > section:not(.no-scroll-track), footer'
-    );
-  
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const sec = entry.target;
-          const section = sec.getAttribute('data-name') ||
-                          sec.getAttribute('id') ||
-                          Array.from(sec.classList).join(' ') ||
-                          'Unnamed Section';
-  
-          if (!trackedSections.includes(section)) {
-            trackedSections.push(section);
-            const props = { section, page: getWPPageName() };
-            const eventName = 'Viewed Section';
-  
-            if (isProduction) {
-              trackEvent(eventName, props);
-            } else {
-              console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
-            }
-          }
-        }
-      });
-    }, { threshold: 0.25 });
-  
-    observedSections.forEach(section => observer.observe(section));
   
     // MENU ITEM CLICK TRACKING
     document.querySelectorAll('nav a:not([data-click]):not([data-plausible]), .menu a:not([data-click]):not([data-plausible]), .main-menu a:not([data-click]):not([data-plausible]), .bricks-nav-menu-wrapper a:not([data-click]):not([data-plausible])').forEach(link => {
