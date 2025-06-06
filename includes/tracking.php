@@ -54,3 +54,32 @@ function nova_enqueue_tracking_script() {
     // Add data attribute to script for config updates
     wp_script_add_data('nova-tracking', 'data-tracking-config', '');
 }
+
+function nova_get_tracking_attributes($element) {
+    $attributes = [];
+    
+    // Check if this element has data-track-inside attribute
+    if ($element->hasAttribute('data-track-inside')) {
+        // Find all elements with data-name inside this element
+        $inner_elements = $element->getElementsByTagName('*');
+        foreach ($inner_elements as $inner) {
+            if ($inner->hasAttribute('data-name')) {
+                $attributes[] = [
+                    'name' => $inner->getAttribute('data-name'),
+                    'type' => 'section'
+                ];
+            }
+        }
+        return $attributes;
+    }
+
+    // Original tracking logic for direct attributes
+    if ($element->hasAttribute('data-name')) {
+        $attributes[] = [
+            'name' => $element->getAttribute('data-name'),
+            'type' => 'section'
+        ];
+    }
+    
+    return $attributes;
+}
