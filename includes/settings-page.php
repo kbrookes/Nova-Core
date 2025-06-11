@@ -117,6 +117,14 @@ function nova_core_register_settings() {
         'nova_core_features_section'
     );
 
+    add_settings_field(
+        'move_rankmath_metabox',
+        'Move RankMath Metabox to Bottom',
+        'nova_core_move_rankmath_metabox_callback',
+        'nova-core-features',
+        'nova_core_features_section'
+    );
+
     // Blog Settings
     add_settings_section(
         'nova_core_blog_section',
@@ -452,6 +460,18 @@ function nova_core_enable_testimonials_callback() {
     ?>
     <input type="checkbox" name="nova_core_features_options[enable_testimonials]" value="1" <?php checked(1, $enabled); ?> />
     <p class="description">Enable the Testimonials custom post type.</p>
+    <?php
+}
+
+function nova_core_move_rankmath_metabox_callback() {
+    $options = get_option('nova_core_features_options');
+    $move_metabox = isset($options['move_rankmath_metabox']) ? $options['move_rankmath_metabox'] : 0;
+    ?>
+    <label>
+        <input type="checkbox" name="nova_core_features_options[move_rankmath_metabox]" value="1" <?php checked(1, $move_metabox); ?>>
+        Move RankMath metabox to the bottom of the content area for custom post types
+    </label>
+    <p class="description">When enabled, the RankMath SEO metabox will appear below the content editor for all custom post types (excluding posts and pages).</p>
     <?php
 }
 
