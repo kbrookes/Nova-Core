@@ -5,8 +5,23 @@ function nova_get_page_title() {
     if (is_singular()) {
         return get_the_title();
     } elseif (is_home()) {
+        // Check if this is the blog posts page
+        if (get_option('show_on_front') === 'page' && get_option('page_for_posts')) {
+            return get_the_title(get_option('page_for_posts'));
+        }
         return 'Home';
     } elseif (is_archive()) {
+        // Get the post type or taxonomy archive label
+        if (is_post_type_archive()) {
+            $post_type = get_post_type_object(get_post_type());
+            return $post_type ? $post_type->labels->name : 'Archive';
+        } elseif (is_category() || is_tag() || is_tax()) {
+            $term = get_queried_object();
+            if ($term) {
+                $taxonomy = get_taxonomy($term->taxonomy);
+                return $taxonomy ? $taxonomy->labels->name : 'Archive';
+            }
+        }
         return 'Archive';
     } elseif (is_search()) {
         return 'Search';
