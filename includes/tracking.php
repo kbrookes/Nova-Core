@@ -34,19 +34,8 @@ function nova_get_page_title() {
 add_action('wp_enqueue_scripts', 'nova_enqueue_tracking_script');
 function nova_enqueue_tracking_script() {
     $options = get_option('nova_core_tracking_options');
-    $tracking_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
     $environment = isset($options['environment']) ? $options['environment'] : 'production';
     $tracking_enabled = isset($options['tracking_enabled']) ? $options['tracking_enabled'] : 1;
-
-    /**
-     * TODO: Zaraz Detection Issue
-     * The current auto-detection of Zaraz is not working reliably on production sites
-     * where Zaraz is configured via Cloudflare and disabled for logged-in users.
-     * 
-     * This affects the tracking mode detection in the admin interface and may
-     * cause incorrect status reporting. Manual mode selection may be required
-     * until this is resolved.
-     */
 
     wp_enqueue_script(
         'nova-tracking',
@@ -56,30 +45,15 @@ function nova_enqueue_tracking_script() {
         true
     );
 
-    // Pass settings to JS
+    // Pass essential settings to JS
     $js_config = array(
-        'autodetect' => $tracking_mode === 'auto',
-        'forceMode' => $tracking_mode === 'auto' ? '' : $tracking_mode,
-        'mode' => $tracking_mode,
         'pageTitle' => nova_get_page_title(),
         'environment' => $environment,
         'trackingEnabled' => (bool)$tracking_enabled
     );
     
-    // Pass settings to JS using wp_localize_script (more reliable than wp_add_inline_script)
+    // Pass settings to JS using wp_localize_script
     wp_localize_script('nova-tracking', 'novaCoreConfig', $js_config);
-    
-    // Add data attribute to script for config updates
-    wp_script_add_data('nova-tracking', 'data-tracking-config', '');
-    
-    // Debug: Check if script was enqueued
-    error_log('Nova Core: Script enqueued with handle: nova-tracking');
-    error_log('Nova Core: Config localized for nova-tracking');
-    
-    // Add a simple HTML comment to verify this function is running
-    add_action('wp_footer', function() {
-        echo '<!-- Nova Core: Tracking function executed -->';
-    });
 }
 
 function nova_get_tracking_attributes($element) {

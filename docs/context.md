@@ -1,9 +1,19 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.39** - [Current Date]
+**Version 0.1.40** - [Current Date]
 
 ## Version History
+
+### Version 0.1.40 - [Current Date]
+- Feature/Change: Simplified tracking approach to always send events to all available backends
+- Status: ✅ Complete
+- Notes:
+  - Removed complex detection logic and getTrackingMode() function
+  - trackEvent() now always tries to send to Plausible, Google Analytics, and Zaraz if available
+  - Simplified PHP configuration to only pass essential page title and environment info
+  - This approach works regardless of how tracking scripts are loaded (local or via Zaraz)
+  - Aligns with original intent to use Zaraz for loading all tracking scripts
 
 ### Version 0.1.39 - [Current Date]
 - Feature/Change: Improved page detection logic and added debugging for page identification

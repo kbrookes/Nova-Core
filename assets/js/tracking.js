@@ -1,78 +1,9 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('=== NOVA CORE TRACKING v0.1.38 LOADED ===');
+    console.log('=== NOVA CORE TRACKING v0.1.40 LOADED ===');
     
-    // Use the working configuration source
+        // Use the working configuration source
     const config = window.novaCoreConfig || {};
     const isProduction = config.environment === 'production';
-    const trackingEnabled = config.trackingEnabled !== false;
-  
-    // Initialize tracking config if it doesn't exist
-    window.trackingConfig = window.trackingConfig || {};
-  
-    /**
-     * TODO: Zaraz Detection Issue
-     * Current detection methods are not reliably detecting Zaraz on production sites
-     * where Zaraz is configured via Cloudflare and disabled for logged-in users.
-     * 
-     * Investigation needed:
-     * 1. Verify Zaraz configuration in Cloudflare
-     * 2. Check how Zaraz is being loaded/disabled
-     * 3. Consider alternative detection methods
-     * 4. Test with different user states (logged in/out)
-     */
-    function detectZaraz() {
-        // Method 1: Check for zaraz object (when enabled)
-        if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
-            return true;
-        }
-
-        // Method 2: Check for zaraz script tag
-        const zarazScript = document.querySelector('script[src*="zaraz"]');
-        if (zarazScript) {
-            return true;
-        }
-
-        // Method 3: Check for zaraz cookie
-        if (document.cookie.includes('_zaraz')) {
-            return true;
-        }
-
-        // Method 4: Check for zaraz meta tag
-        const zarazMeta = document.querySelector('meta[name="zaraz"]');
-        if (zarazMeta) {
-            return true;
-        }
-
-        return false;
-    }
-  
-    function getTrackingMode() {
-      if (!trackingEnabled) return 'none';
-      
-      // If forceMode is set, use it directly
-      if (typeof config.forceMode === 'string' && config.forceMode.length > 0) {
-        return config.forceMode;
-      }
-      
-      // Only auto-detect if autodetect is true
-      if (config.autodetect === false) return 'none';
-      
-      // Check for Zaraz using multiple detection methods
-      if (detectZaraz()) {
-        // Notify PHP about Zaraz detection
-        window.trackingConfig.detectedZaraz = true;
-        // Update the config in the DOM for PHP to read
-        const script = document.querySelector('script[data-tracking-config]');
-        if (script) {
-          script.textContent = 'window.trackingConfig = ' + JSON.stringify(window.trackingConfig) + ';';
-        }
-        return 'zaraz';
-      }
-      
-      // Check for Google Analytics
-      if (typeof gtag === 'function') return 'gtag';
-      return 'none';
-    }
   
     function getWPPageName() {
       const config = window.novaCoreConfig || {};
@@ -125,16 +56,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     function trackEvent(eventName, props) {
-      const mode = getTrackingMode();
-      if (mode === 'zaraz') {
-        zaraz.track(eventName, props);
-      } else if (mode === 'gtag') {
+      // Always try to send to Plausible if available
+      if (typeof plausible === 'function') {
+        plausible(eventName, { props });
+      }
+      
+      // Always try to send to Google Analytics if available
+      if (typeof gtag === 'function') {
         gtag('event', eventName, {
           event_category: 'Custom Tracking',
           event_label: props.label || props.section || 'Unknown',
           page_title: props.page || document.title,
           section: props.section || 'Unknown'
         });
+      }
+      
+      // Always try to send to Zaraz if available
+      if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
+        window.zaraz.track(eventName, props);
       }
     }
   
