@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.26** - [Current Date]
+**Version 0.1.27** - [Current Date]
 
 ## Version History
+
+### Version 0.1.27 - [Current Date]
+- Feature/Change: Added comprehensive debug logging to troubleshoot tracking configuration issues
+- Status: ✅ Complete
+- Notes:
+  - Added PHP debug logging to error_log for tracking configuration
+  - Added JavaScript console logging for config, environment, isProduction, trackingEnabled, forceMode, and autodetect
+  - Added check for config modification after initial load
+  - This will help identify why environment is undefined and events are still showing as "suppressed" in production mode
 
 ### Version 0.1.26 - [Current Date]
 - Feature/Change: Added debug logging to tracking configuration to troubleshoot production mode issues

@@ -10,6 +10,13 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('trackingEnabled:', trackingEnabled);
     console.log('forceMode:', config.forceMode);
     console.log('autodetect:', config.autodetect);
+    console.log('Raw window.trackingConfig:', window.trackingConfig);
+    
+    // Check if config was modified after initial load
+    if (window.trackingConfig && window.trackingConfig !== config) {
+        console.warn('Config was modified after initial load!');
+        console.log('Modified config:', window.trackingConfig);
+    }
   
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};

@@ -57,14 +57,19 @@ function nova_enqueue_tracking_script() {
     );
 
     // Pass settings to JS
-    wp_add_inline_script('nova-tracking', 'window.trackingConfig = ' . json_encode(array(
+    $js_config = array(
         'autodetect' => $tracking_mode === 'auto',
         'forceMode' => $tracking_mode === 'auto' ? '' : $tracking_mode,
         'mode' => $tracking_mode,
         'pageTitle' => nova_get_page_title(),
         'environment' => $environment,
         'trackingEnabled' => (bool)$tracking_enabled
-    )) . ';', 'before');
+    );
+    
+    // Debug logging
+    error_log('Nova Core PHP Config: ' . print_r($js_config, true));
+    
+    wp_add_inline_script('nova-tracking', 'window.trackingConfig = ' . json_encode($js_config) . ';', 'before');
 
     // Add data attribute to script for config updates
     wp_script_add_data('nova-tracking', 'data-tracking-config', '');
