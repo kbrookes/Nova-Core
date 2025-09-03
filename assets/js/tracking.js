@@ -1,18 +1,10 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('=== NOVA CORE TRACKING v0.1.37 LOADED ===');
+    console.log('=== NOVA CORE TRACKING v0.1.38 LOADED ===');
     
     // Use the working configuration source
     const config = window.novaCoreConfig || {};
     const isProduction = config.environment === 'production';
     const trackingEnabled = config.trackingEnabled !== false;
-  
-    // Debug logging
-    console.log('Nova Core Tracking Config:', config);
-    console.log('Environment:', config.environment);
-    console.log('isProduction:', isProduction);
-    console.log('trackingEnabled:', trackingEnabled);
-    console.log('forceMode:', config.forceMode);
-    console.log('autodetect:', config.autodetect);
   
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};
@@ -55,36 +47,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     function getTrackingMode() {
-      console.log('getTrackingMode() called with:', {
-        trackingEnabled,
-        forceMode: config.forceMode,
-        autodetect: config.autodetect,
-        forceModeType: typeof config.forceMode,
-        forceModeLength: config.forceMode ? config.forceMode.length : 'N/A'
-      });
-      
-      if (!trackingEnabled) {
-        console.log('getTrackingMode: tracking disabled, returning none');
-        return 'none';
-      }
+      if (!trackingEnabled) return 'none';
       
       // If forceMode is set, use it directly
       if (typeof config.forceMode === 'string' && config.forceMode.length > 0) {
-        console.log('getTrackingMode: using forceMode:', config.forceMode);
         return config.forceMode;
       }
       
       // Only auto-detect if autodetect is true
-      if (config.autodetect === false) {
-        console.log('getTrackingMode: autodetect is false, returning none');
-        return 'none';
-      }
-      
-      console.log('getTrackingMode: attempting auto-detection');
+      if (config.autodetect === false) return 'none';
       
       // Check for Zaraz using multiple detection methods
       if (detectZaraz()) {
-        console.log('getTrackingMode: Zaraz detected, returning zaraz');
         // Notify PHP about Zaraz detection
         window.trackingConfig.detectedZaraz = true;
         // Update the config in the DOM for PHP to read
@@ -96,12 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       
       // Check for Google Analytics
-      if (typeof gtag === 'function') {
-        console.log('getTrackingMode: gtag detected, returning gtag');
-        return 'gtag';
-      }
-      
-      console.log('getTrackingMode: no tracking backend detected, returning none');
+      if (typeof gtag === 'function') return 'gtag';
       return 'none';
     }
   
@@ -129,8 +98,6 @@ document.addEventListener('DOMContentLoaded', function () {
           page_title: props.page || document.title,
           section: props.section || 'Unknown'
         });
-      } else {
-        console.warn('No tracking backend available → event not sent:', eventName, props);
       }
     }
   
@@ -159,29 +126,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const observedSections = document.querySelectorAll(
       'main > section:not(.no-scroll-track), main > .brxe-template > section:not(.no-scroll-track), footer'
     );
-    
-    console.log('Setting up IntersectionObserver for sections:', observedSections);
-    observedSections.forEach((section, index) => {
-      console.log(`Section ${index}:`, {
-        element: section,
-        classes: section.className,
-        id: section.id,
-        dataName: section.getAttribute('data-name')
-      });
-    });
   
     const observer = new IntersectionObserver((entries) => {
-      console.log('IntersectionObserver triggered with', entries.length, 'entries');
-      entries.forEach((entry, index) => {
-        console.log(`Entry ${index}:`, {
-          target: entry.target,
-          isIntersecting: entry.isIntersecting,
-          intersectionRatio: entry.intersectionRatio,
-          boundingClientRect: entry.boundingClientRect,
-          rootBounds: entry.rootBounds,
-          time: entry.time
-        });
-        
+      entries.forEach(entry => {
         if (entry.isIntersecting) {
           const sec = entry.target;
           
@@ -192,24 +139,13 @@ document.addEventListener('DOMContentLoaded', function () {
             namedElements.forEach(namedEl => {
               const section = namedEl.getAttribute('data-name');
               if (!trackedSections.includes(section)) {
-                console.log('Section not yet tracked (data-track-inside), adding to array:', section);
-                console.log('Current trackedSections array (data-track-inside):', trackedSections);
                 trackedSections.push(section);
                 const props = { section, page: getWPPageName() };
                 const eventName = 'Viewed Section';
   
-                // Debug: Log the current state when processing scroll event
-                console.log('Scroll tracking debug (data-track-inside) - isProduction:', isProduction, 'config.environment:', config.environment);
-                
                 if (isProduction) {
-                  console.log('Scroll event should be tracked (data-track-inside):', eventName, props);
                   trackEvent(eventName, props);
-                } else {
-                  console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
                 }
-              } else {
-                console.log('Section already tracked (data-track-inside), skipping:', section);
-                console.log('Current trackedSections array (data-track-inside):', trackedSections);
               }
             });
           } else {
@@ -220,24 +156,13 @@ document.addEventListener('DOMContentLoaded', function () {
                           'Unnamed Section';
   
             if (!trackedSections.includes(section)) {
-              console.log('Section not yet tracked, adding to array:', section);
-              console.log('Current trackedSections array:', trackedSections);
               trackedSections.push(section);
               const props = { section, page: getWPPageName() };
               const eventName = 'Viewed Section';
   
-              // Debug: Log the current state when processing scroll event
-              console.log('Scroll tracking debug (regular) - isProduction:', isProduction, 'config.environment:', config.environment);
-              
               if (isProduction) {
-                console.log('Scroll event should be tracked (regular):', eventName, props);
                 trackEvent(eventName, props);
-              } else {
-                console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
               }
-            } else {
-              console.log('Section already tracked, skipping:', section);
-              console.log('Current trackedSections array:', trackedSections);
             }
           }
         }
@@ -274,8 +199,6 @@ document.addEventListener('DOMContentLoaded', function () {
           const plausibleEventName = `${eventName} - ${section} - ${page}`;
           if (typeof plausible === 'function') plausible(plausibleEventName, { props });
           trackEvent(eventName, props);
-        } else {
-          console.info('Staging mode → click event suppressed:', Object.assign({ event: eventName }, props));
         }
       });
     });
@@ -292,8 +215,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isProduction) {
           if (typeof plausible === 'function') plausible(eventName, { props });
           trackEvent(eventName, props);
-        } else {
-          console.info('Staging mode → form event suppressed:', Object.assign({ event: eventName }, props));
         }
       });
     });
@@ -329,8 +250,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (isProduction) {
           if (typeof plausible === 'function') plausible(eventName, { props });
           trackEvent(eventName, props);
-        } else {
-          console.info('Staging mode → menu click suppressed:', Object.assign({ event: eventName }, props));
         }
       });
     });
