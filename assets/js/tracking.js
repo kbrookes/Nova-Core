@@ -15,12 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     
-    const config = window.trackingConfig || {};
+    // Check both possible config sources
+    const config = window.trackingConfig || window.novaCoreConfig || {};
     const isProduction = config.environment === 'production';
     const trackingEnabled = config.trackingEnabled !== false;
   
     // Debug logging
     console.log('Nova Core Tracking Config:', config);
+    console.log('Nova Core Config (localized):', window.novaCoreConfig);
     console.log('Environment:', config.environment);
     console.log('isProduction:', isProduction);
     console.log('trackingEnabled:', trackingEnabled);

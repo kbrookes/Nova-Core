@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.29** - [Current Date]
+**Version 0.1.30** - [Current Date]
 
 ## Version History
+
+### Version 0.1.30 - [Current Date]
+- Feature/Change: Enhanced debugging with fallback configuration methods and comprehensive script injection troubleshooting
+- Status: ✅ Complete
+- Notes:
+  - Added wp_localize_script as backup to wp_add_inline_script
+  - Added HTML comment debugging to verify PHP execution and expected configuration
+  - Updated JavaScript to check both configuration sources
+  - This will help identify which script injection method works and why the configuration is not being loaded
 
 ### Version 0.1.29 - [Current Date]
 - Feature/Change: Restored tracking configuration and added comprehensive debugging to identify script injection issues

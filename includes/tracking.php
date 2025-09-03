@@ -70,7 +70,11 @@ function nova_enqueue_tracking_script() {
     error_log('Nova Core PHP Config: ' . print_r($js_config, true));
     error_log('Nova Core PHP JSON: ' . json_encode($js_config));
     
+    // Pass settings to JS
     wp_add_inline_script('nova-tracking', 'window.trackingConfig = ' . json_encode($js_config) . ';', 'before');
+    
+    // Also try wp_localize_script as a backup
+    wp_localize_script('nova-tracking', 'novaCoreConfig', $js_config);
     
     // Also add a comment to see if the script is being output
     wp_add_inline_script('nova-tracking', '// Nova Core Debug: Config should be set above', 'before');
