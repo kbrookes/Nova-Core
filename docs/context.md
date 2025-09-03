@@ -1,9 +1,17 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.33** - [Current Date]
+**Version 0.1.34** - [Current Date]
 
 ## Version History
+
+### Version 0.1.34 - [Current Date]
+- Feature/Change: Added debugging to trackedSections array to investigate duplicate scroll event processing
+- Status: 🔍 Testing
+- Notes:
+  - Added console.log statements to see if sections are being processed multiple times
+  - This will help identify if there's an issue with the IntersectionObserver or duplicate section detection
+  - The issue appears to be that trackEvent() is called but "Staging mode" message still appears
 
 ### Version 0.1.33 - [Current Date]
 - Feature/Change: Added comprehensive debugging to getTrackingMode function to investigate tracking backend detection

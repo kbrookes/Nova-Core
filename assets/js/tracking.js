@@ -170,6 +170,8 @@ document.addEventListener('DOMContentLoaded', function () {
             namedElements.forEach(namedEl => {
               const section = namedEl.getAttribute('data-name');
               if (!trackedSections.includes(section)) {
+                console.log('Section not yet tracked (data-track-inside), adding to array:', section);
+                console.log('Current trackedSections array (data-track-inside):', trackedSections);
                 trackedSections.push(section);
                 const props = { section, page: getWPPageName() };
                 const eventName = 'Viewed Section';
@@ -183,6 +185,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                   console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
                 }
+              } else {
+                console.log('Section already tracked (data-track-inside), skipping:', section);
+                console.log('Current trackedSections array (data-track-inside):', trackedSections);
               }
             });
           } else {
@@ -193,6 +198,8 @@ document.addEventListener('DOMContentLoaded', function () {
                           'Unnamed Section';
   
             if (!trackedSections.includes(section)) {
+              console.log('Section not yet tracked, adding to array:', section);
+              console.log('Current trackedSections array:', trackedSections);
               trackedSections.push(section);
               const props = { section, page: getWPPageName() };
               const eventName = 'Viewed Section';
@@ -206,6 +213,9 @@ document.addEventListener('DOMContentLoaded', function () {
               } else {
                 console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
               }
+            } else {
+              console.log('Section already tracked, skipping:', section);
+              console.log('Current trackedSections array:', trackedSections);
             }
           }
         }
