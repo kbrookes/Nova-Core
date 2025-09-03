@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.27** - [Current Date]
+**Version 0.1.28** - [Current Date]
 
 ## Version History
+
+### Version 0.1.28 - [Current Date]
+- Feature/Change: Enhanced debugging with config modification monitoring and detailed PHP logging
+- Status: ✅ Complete
+- Notes:
+  - Added Object.defineProperty to monitor when window.trackingConfig is modified
+  - Added detailed PHP logging to error_log for both array and JSON output
+  - Added HTML comment debugging to verify script injection
+  - This will help identify exactly when and how the tracking configuration is being corrupted
 
 ### Version 0.1.27 - [Current Date]
 - Feature/Change: Added comprehensive debug logging to troubleshoot tracking configuration issues

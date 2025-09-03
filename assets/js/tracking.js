@@ -1,4 +1,20 @@
 document.addEventListener('DOMContentLoaded', function () {
+    // Monitor changes to window.trackingConfig
+    let originalConfig = null;
+    Object.defineProperty(window, 'trackingConfig', {
+        get: function() {
+            return originalConfig;
+        },
+        set: function(value) {
+            if (originalConfig !== null) {
+                console.warn('trackingConfig was modified!');
+                console.log('Original:', originalConfig);
+                console.log('New:', value);
+            }
+            originalConfig = value;
+        }
+    });
+    
     const config = window.trackingConfig || {};
     const isProduction = config.environment === 'production';
     const trackingEnabled = config.trackingEnabled !== false;
