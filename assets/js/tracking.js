@@ -53,18 +53,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     function getTrackingMode() {
-      if (!trackingEnabled) return 'none';
+      console.log('getTrackingMode() called with:', {
+        trackingEnabled,
+        forceMode: config.forceMode,
+        autodetect: config.autodetect,
+        forceModeType: typeof config.forceMode,
+        forceModeLength: config.forceMode ? config.forceMode.length : 'N/A'
+      });
+      
+      if (!trackingEnabled) {
+        console.log('getTrackingMode: tracking disabled, returning none');
+        return 'none';
+      }
       
       // If forceMode is set, use it directly
       if (typeof config.forceMode === 'string' && config.forceMode.length > 0) {
+        console.log('getTrackingMode: using forceMode:', config.forceMode);
         return config.forceMode;
       }
       
       // Only auto-detect if autodetect is true
-      if (config.autodetect === false) return 'none';
+      if (config.autodetect === false) {
+        console.log('getTrackingMode: autodetect is false, returning none');
+        return 'none';
+      }
+      
+      console.log('getTrackingMode: attempting auto-detection');
       
       // Check for Zaraz using multiple detection methods
       if (detectZaraz()) {
+        console.log('getTrackingMode: Zaraz detected, returning zaraz');
         // Notify PHP about Zaraz detection
         window.trackingConfig.detectedZaraz = true;
         // Update the config in the DOM for PHP to read
@@ -76,7 +94,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       
       // Check for Google Analytics
-      if (typeof gtag === 'function') return 'gtag';
+      if (typeof gtag === 'function') {
+        console.log('getTrackingMode: gtag detected, returning gtag');
+        return 'gtag';
+      }
+      
+      console.log('getTrackingMode: no tracking backend detected, returning none');
       return 'none';
     }
   

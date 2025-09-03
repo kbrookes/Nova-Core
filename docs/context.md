@@ -1,9 +1,16 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.32** - [Current Date]
+**Version 0.1.33** - [Current Date]
 
 ## Version History
+
+### Version 0.1.33 - [Current Date]
+- Feature/Change: Added comprehensive debugging to getTrackingMode function to investigate tracking backend detection
+- Status: 🔍 Testing
+- Notes:
+  - Added detailed console.log statements in getTrackingMode() to see exactly why it's returning 'none' instead of 'zaraz'
+  - This will help identify if there's an issue with forceMode detection or the logic flow
 
 ### Version 0.1.32 - [Current Date]
 - Feature/Change: Added debugging to scroll tracking to investigate isProduction variable behavior
