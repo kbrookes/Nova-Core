@@ -1,9 +1,16 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.31** - [Current Date]
+**Version 0.1.32** - [Current Date]
 
 ## Version History
+
+### Version 0.1.32 - [Current Date]
+- Feature/Change: Added debugging to scroll tracking to investigate isProduction variable behavior
+- Status: 🔍 Testing
+- Notes:
+  - Added console.log statements in scroll tracking sections to debug why isProduction is true but events are still suppressed
+  - This will help identify if there's a variable scope or timing issue
 
 ### Version 0.1.31 - [Current Date]
 - Feature/Change: Fixed tracking configuration by switching to wp_localize_script and cleaned up debugging

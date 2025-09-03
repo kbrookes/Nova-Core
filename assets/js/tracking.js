@@ -151,7 +151,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const props = { section, page: getWPPageName() };
                 const eventName = 'Viewed Section';
   
+                // Debug: Log the current state when processing scroll event
+                console.log('Scroll tracking debug (data-track-inside) - isProduction:', isProduction, 'config.environment:', config.environment);
+                
                 if (isProduction) {
+                  console.log('Scroll event should be tracked (data-track-inside):', eventName, props);
                   trackEvent(eventName, props);
                 } else {
                   console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
@@ -170,7 +174,11 @@ document.addEventListener('DOMContentLoaded', function () {
               const props = { section, page: getWPPageName() };
               const eventName = 'Viewed Section';
   
+              // Debug: Log the current state when processing scroll event
+              console.log('Scroll tracking debug (regular) - isProduction:', isProduction, 'config.environment:', config.environment);
+              
               if (isProduction) {
+                console.log('Scroll event should be tracked (regular):', eventName, props);
                 trackEvent(eventName, props);
               } else {
                 console.info('Staging mode → scroll event suppressed:', Object.assign({ event: eventName }, props));
