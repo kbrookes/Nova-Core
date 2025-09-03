@@ -1,40 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Monitor changes to window.trackingConfig
-    let originalConfig = null;
-    Object.defineProperty(window, 'trackingConfig', {
-        get: function() {
-            return originalConfig;
-        },
-        set: function(value) {
-            if (originalConfig !== null) {
-                console.warn('trackingConfig was modified!');
-                console.log('Original:', originalConfig);
-                console.log('New:', value);
-            }
-            originalConfig = value;
-        }
-    });
-    
-    // Check both possible config sources
-    const config = window.trackingConfig || window.novaCoreConfig || {};
+    // Use the working configuration source
+    const config = window.novaCoreConfig || {};
     const isProduction = config.environment === 'production';
     const trackingEnabled = config.trackingEnabled !== false;
   
     // Debug logging
     console.log('Nova Core Tracking Config:', config);
-    console.log('Nova Core Config (localized):', window.novaCoreConfig);
     console.log('Environment:', config.environment);
     console.log('isProduction:', isProduction);
     console.log('trackingEnabled:', trackingEnabled);
     console.log('forceMode:', config.forceMode);
     console.log('autodetect:', config.autodetect);
-    console.log('Raw window.trackingConfig:', window.trackingConfig);
-    
-    // Check if config was modified after initial load
-    if (window.trackingConfig && window.trackingConfig !== config) {
-        console.warn('Config was modified after initial load!');
-        console.log('Modified config:', window.trackingConfig);
-    }
   
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};

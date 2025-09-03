@@ -66,25 +66,15 @@ function nova_enqueue_tracking_script() {
         'trackingEnabled' => (bool)$tracking_enabled
     );
     
-    // Debug logging
-    error_log('Nova Core PHP Config: ' . print_r($js_config, true));
-    error_log('Nova Core PHP JSON: ' . json_encode($js_config));
-    
-    // Pass settings to JS
-    wp_add_inline_script('nova-tracking', 'window.trackingConfig = ' . json_encode($js_config) . ';', 'before');
-    
-    // Also try wp_localize_script as a backup
+    // Pass settings to JS using wp_localize_script (more reliable than wp_add_inline_script)
     wp_localize_script('nova-tracking', 'novaCoreConfig', $js_config);
     
-    // Also add a comment to see if the script is being output
-    wp_add_inline_script('nova-tracking', '// Nova Core Debug: Config should be set above', 'before');
-
     // Add data attribute to script for config updates
     wp_script_add_data('nova-tracking', 'data-tracking-config', '');
-
+    
     // Debug: Check if script was enqueued
     error_log('Nova Core: Script enqueued with handle: nova-tracking');
-    error_log('Nova Core: Inline script added for nova-tracking');
+    error_log('Nova Core: Config localized for nova-tracking');
     
     // Add a simple HTML comment to verify this function is running
     add_action('wp_footer', function() {

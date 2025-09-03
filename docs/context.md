@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.30** - [Current Date]
+**Version 0.1.31** - [Current Date]
 
 ## Version History
+
+### Version 0.1.31 - [Current Date]
+- Feature/Change: Fixed tracking configuration by switching to wp_localize_script and cleaned up debugging
+- Status: ✅ Complete
+- Notes:
+  - Identified that wp_add_inline_script was not working reliably
+  - Switched to wp_localize_script which is working perfectly
+  - Cleaned up complex debugging code
+  - Tracking should now work properly in production mode with Zaraz
 
 ### Version 0.1.30 - [Current Date]
 - Feature/Change: Enhanced debugging with fallback configuration methods and comprehensive script injection troubleshooting
