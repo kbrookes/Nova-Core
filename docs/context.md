@@ -1,9 +1,17 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.36** - [Current Date]
+**Version 0.1.37** - [Current Date]
 
 ## Version History
+
+### Version 0.1.37 - [Current Date]
+- Feature/Change: Fixed version identifier in JavaScript to match plugin version
+- Status: ✅ Complete
+- Notes:
+  - Corrected the console.log version number from 0.1.35 to 0.1.36
+  - This was a simple oversight when adding the version identifier
+  - The tracking is now working correctly after removing duplicate theme code
 
 ### Version 0.1.36 - [Current Date]
 - Feature/Change: Added version identifier to confirm correct tracking code is loaded

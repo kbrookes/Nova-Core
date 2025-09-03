@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('=== NOVA CORE TRACKING v0.1.35 LOADED ===');
+    console.log('=== NOVA CORE TRACKING v0.1.37 LOADED ===');
     
     // Use the working configuration source
     const config = window.novaCoreConfig || {};
