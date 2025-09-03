@@ -1,9 +1,17 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.35** - [Current Date]
+**Version 0.1.36** - [Current Date]
 
 ## Version History
+
+### Version 0.1.36 - [Current Date]
+- Feature/Change: Added version identifier to confirm correct tracking code is loaded
+- Status: 🔍 Testing
+- Notes:
+  - Added console.log with version identifier to confirm we're running the right code
+  - The "Staging mode" message appears to be coming from a different source than the IntersectionObserver
+  - This suggests there might be cached JavaScript or duplicate tracking code running
 
 ### Version 0.1.35 - [Current Date]
 - Feature/Change: Added debugging to IntersectionObserver to investigate duplicate section processing

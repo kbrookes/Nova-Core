@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+    console.log('=== NOVA CORE TRACKING v0.1.35 LOADED ===');
+    
     // Use the working configuration source
     const config = window.novaCoreConfig || {};
     const isProduction = config.environment === 'production';
