@@ -75,15 +75,52 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     function getWPPageName() {
-      const config = window.trackingConfig || {};
+      const config = window.novaCoreConfig || {};
+      
+      // Temporary debugging
+      console.log('getWPPageName debug:', {
+        configPageTitle: config.pageTitle,
+        bodyClasses: document.body.className,
+        documentTitle: document.title,
+        novaCoreConfig: window.novaCoreConfig
+      });
+      
       if (config.pageTitle) return config.pageTitle;
       
       const body = document.body;
+      
+      // Check for page-name-* classes first
       const match = [...body.classList].find(cls => cls.startsWith('page-name-'));
       if (match) return match.replace('page-name-', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      
+      // Check for WordPress standard classes
       if (body.classList.contains('home')) return 'Home';
       if (body.classList.contains('blog')) return 'Blog';
       if (body.classList.contains('archive')) return 'Archive';
+      if (body.classList.contains('single')) return 'Single Post';
+      if (body.classList.contains('page')) return 'Page';
+      if (body.classList.contains('search')) return 'Search Results';
+      if (body.classList.contains('404')) return 'Page Not Found';
+      
+      // Check for post type classes
+      const postTypeMatch = [...body.classList].find(cls => cls.startsWith('post-type-'));
+      if (postTypeMatch) {
+        const postType = postTypeMatch.replace('post-type-', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return postType;
+      }
+      
+      // Check for taxonomy classes
+      const taxonomyMatch = [...body.classList].find(cls => cls.startsWith('tax-'));
+      if (taxonomyMatch) {
+        const taxonomy = taxonomyMatch.replace('tax-', '').replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        return taxonomy;
+      }
+      
+      // Fallback to document title
+      if (document.title) {
+        return document.title.replace(/[-|–] .*$/, '').trim();
+      }
+      
       return 'Unknown Page';
     }
   

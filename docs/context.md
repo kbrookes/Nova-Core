@@ -1,9 +1,19 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.38** - [Current Date]
+**Version 0.1.39** - [Current Date]
 
 ## Version History
+
+### Version 0.1.39 - [Current Date]
+- Feature/Change: Improved page detection logic and added debugging for page identification
+- Status: 🔍 Testing
+- Notes:
+  - Enhanced getWPPageName() function to detect more WordPress page types
+  - Added support for post-type-* and tax-* CSS classes
+  - Added fallback to document title
+  - Added temporary debugging to see what page information is available
+  - This should resolve "Unknown Page" issues in tracking events
 
 ### Version 0.1.38 - [Current Date]
 - Feature/Change: Clean production release - removed all debugging code
