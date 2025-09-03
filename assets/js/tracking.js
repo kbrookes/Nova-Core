@@ -3,6 +3,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const isProduction = config.environment === 'production';
     const trackingEnabled = config.trackingEnabled !== false;
   
+    // Debug logging
+    console.log('Nova Core Tracking Config:', config);
+    console.log('Environment:', config.environment);
+    console.log('isProduction:', isProduction);
+    console.log('trackingEnabled:', trackingEnabled);
+    console.log('forceMode:', config.forceMode);
+    console.log('autodetect:', config.autodetect);
+  
     // Initialize tracking config if it doesn't exist
     window.trackingConfig = window.trackingConfig || {};
   
