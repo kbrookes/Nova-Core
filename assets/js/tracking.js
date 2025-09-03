@@ -45,7 +45,13 @@ document.addEventListener('DOMContentLoaded', function () {
   
     function getTrackingMode() {
       if (!trackingEnabled) return 'none';
-      if (typeof config.forceMode === 'string' && config.forceMode.length > 0) return config.forceMode;
+      
+      // If forceMode is set, use it directly
+      if (typeof config.forceMode === 'string' && config.forceMode.length > 0) {
+        return config.forceMode;
+      }
+      
+      // Only auto-detect if autodetect is true
       if (config.autodetect === false) return 'none';
       
       // Check for Zaraz using multiple detection methods
