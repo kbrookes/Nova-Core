@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.28** - [Current Date]
+**Version 0.1.29** - [Current Date]
 
 ## Version History
+
+### Version 0.1.29 - [Current Date]
+- Feature/Change: Restored tracking configuration and added comprehensive debugging to identify script injection issues
+- Status: ✅ Complete
+- Notes:
+  - Restored accidentally removed js_config variable
+  - Added HTML comment verification that tracking function is executing
+  - Added detailed logging for script enqueuing and inline script addition
+  - This will help identify why the tracking configuration is not being injected into the page
 
 ### Version 0.1.28 - [Current Date]
 - Feature/Change: Enhanced debugging with config modification monitoring and detailed PHP logging

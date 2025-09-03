@@ -77,6 +77,15 @@ function nova_enqueue_tracking_script() {
 
     // Add data attribute to script for config updates
     wp_script_add_data('nova-tracking', 'data-tracking-config', '');
+
+    // Debug: Check if script was enqueued
+    error_log('Nova Core: Script enqueued with handle: nova-tracking');
+    error_log('Nova Core: Inline script added for nova-tracking');
+    
+    // Add a simple HTML comment to verify this function is running
+    add_action('wp_footer', function() {
+        echo '<!-- Nova Core: Tracking function executed -->';
+    });
 }
 
 function nova_get_tracking_attributes($element) {
