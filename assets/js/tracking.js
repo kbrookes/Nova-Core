@@ -157,9 +157,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const observedSections = document.querySelectorAll(
       'main > section:not(.no-scroll-track), main > .brxe-template > section:not(.no-scroll-track), footer'
     );
+    
+    console.log('Setting up IntersectionObserver for sections:', observedSections);
+    observedSections.forEach((section, index) => {
+      console.log(`Section ${index}:`, {
+        element: section,
+        classes: section.className,
+        id: section.id,
+        dataName: section.getAttribute('data-name')
+      });
+    });
   
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+      console.log('IntersectionObserver triggered with', entries.length, 'entries');
+      entries.forEach((entry, index) => {
+        console.log(`Entry ${index}:`, {
+          target: entry.target,
+          isIntersecting: entry.isIntersecting,
+          intersectionRatio: entry.intersectionRatio,
+          boundingClientRect: entry.boundingClientRect,
+          rootBounds: entry.rootBounds,
+          time: entry.time
+        });
+        
         if (entry.isIntersecting) {
           const sec = entry.target;
           

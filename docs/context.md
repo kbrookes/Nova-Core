@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.34** - [Current Date]
+**Version 0.1.35** - [Current Date]
 
 ## Version History
+
+### Version 0.1.35 - [Current Date]
+- Feature/Change: Added debugging to IntersectionObserver to investigate duplicate section processing
+- Status: 🔍 Testing
+- Notes:
+  - Added console.log statements to see exactly when IntersectionObserver triggers
+  - Added debugging to show what sections are being observed
+  - This will help identify if the same section is being processed multiple times by the observer
+  - The issue appears to be duplicate IntersectionObserver triggers for the same section
 
 ### Version 0.1.34 - [Current Date]
 - Feature/Change: Added debugging to trackedSections array to investigate duplicate scroll event processing
