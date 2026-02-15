@@ -1,21 +1,15 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('=== NOVA CORE TRACKING v0.1.40 LOADED ===');
-    
-        // Use the working configuration source
+    // Use the working configuration source
     const config = window.novaCoreConfig || {};
-    const isProduction = config.environment === 'production';
-  
+    const isDevMode = config.environment !== 'production';
+
+    // Log init message only in dev mode
+    if (isDevMode) {
+      console.log('=== NOVA CORE TRACKING v0.1.41 (DEV MODE) ===');
+    }
+
     function getWPPageName() {
       const config = window.novaCoreConfig || {};
-      
-      // Temporary debugging
-      console.log('getWPPageName debug:', {
-        configPageTitle: config.pageTitle,
-        bodyClasses: document.body.className,
-        documentTitle: document.title,
-        novaCoreConfig: window.novaCoreConfig
-      });
-      
       if (config.pageTitle) return config.pageTitle;
       
       const body = document.body;
@@ -56,22 +50,17 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   
     function trackEvent(eventName, props) {
-      // Always try to send to Plausible if available
+      // Log to console in dev mode
+      if (isDevMode) {
+        console.log('📊 Track Event:', eventName, props);
+      }
+
+      // Always send to Plausible if available (via official WP plugin)
       if (typeof plausible === 'function') {
         plausible(eventName, { props });
       }
-      
-      // Always try to send to Google Analytics if available
-      if (typeof gtag === 'function') {
-        gtag('event', eventName, {
-          event_category: 'Custom Tracking',
-          event_label: props.label || props.section || 'Unknown',
-          page_title: props.page || document.title,
-          section: props.section || 'Unknown'
-        });
-      }
-      
-      // Always try to send to Zaraz if available
+
+      // Always send to Zaraz if available (handles GA and other tools)
       if (typeof window.zaraz !== 'undefined' && typeof window.zaraz.track === 'function') {
         window.zaraz.track(eventName, props);
       }
@@ -117,11 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
               if (!trackedSections.includes(section)) {
                 trackedSections.push(section);
                 const props = { section, page: getWPPageName() };
-                const eventName = 'Viewed Section';
-  
-                if (isProduction) {
-                  trackEvent(eventName, props);
-                }
+                trackEvent('Viewed Section', props);
               }
             });
           } else {
@@ -130,15 +115,11 @@ document.addEventListener('DOMContentLoaded', function () {
                           sec.getAttribute('id') ||
                           Array.from(sec.classList).join(' ') ||
                           'Unnamed Section';
-  
+
             if (!trackedSections.includes(section)) {
               trackedSections.push(section);
               const props = { section, page: getWPPageName() };
-              const eventName = 'Viewed Section';
-  
-              if (isProduction) {
-                trackEvent(eventName, props);
-              }
+              trackEvent('Viewed Section', props);
             }
           }
         }
@@ -169,16 +150,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const page = getWPPageName();
         const props = { section, page };
-  
-        if (isProduction) {
-          // Format event name for Plausible: "Event Name - Section - Page"
-          const plausibleEventName = `${eventName} - ${section} - ${page}`;
-          if (typeof plausible === 'function') plausible(plausibleEventName, { props });
-          trackEvent(eventName, props);
-        }
+
+        // Format event name for Plausible: "Event Name - Section - Page"
+        const plausibleEventName = `${eventName} - ${section} - ${page}`;
+        if (typeof plausible === 'function') plausible(plausibleEventName, { props });
+        trackEvent(eventName, props);
       });
     });
-  
+
     // FLUENT FORMS TRACKING
     document.querySelectorAll('form').forEach(form => {
       form.addEventListener('submit', function () {
@@ -187,11 +166,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const section = getSectionName(form);
         const page = getWPPageName();
         const props = { section, page };
-  
-        if (isProduction) {
-          if (typeof plausible === 'function') plausible(eventName, { props });
-          trackEvent(eventName, props);
-        }
+
+        if (typeof plausible === 'function') plausible(eventName, { props });
+        trackEvent(eventName, props);
       });
     });
   
@@ -215,18 +192,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         link.closest('footer') ? 'footer' : 
                         'main';
         
-        const props = { 
-          section, 
-          menu, 
-          label, 
+        const props = {
+          section,
+          menu,
+          label,
           page,
-          location 
+          location
         };
-  
-        if (isProduction) {
-          if (typeof plausible === 'function') plausible(eventName, { props });
-          trackEvent(eventName, props);
-        }
+
+        if (typeof plausible === 'function') plausible(eventName, { props });
+        trackEvent(eventName, props);
       });
     });
   });

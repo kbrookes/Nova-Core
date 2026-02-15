@@ -13,36 +13,43 @@ function nova_core_add_settings_page() {
     );
 }
 
-// Get current tracking mode
-function nova_core_get_current_tracking_mode() {
+// Add admin bar warning for development environment
+add_action('admin_bar_menu', 'nova_core_admin_bar_env_warning', 999);
+function nova_core_admin_bar_env_warning($wp_admin_bar) {
     $options = get_option('nova_core_tracking_options');
-    $configured_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
-    
-    if ($configured_mode === 'auto') {
-        // Check for Zaraz using a more reliable method
-        $script = wp_scripts()->query('nova-tracking');
-        if ($script && $script->done) {
-            // If our tracking script has loaded, check if Zaraz was detected
-            $inline_script = '';
-            foreach ($script->extra['data'] as $data) {
-                if (strpos($data, 'window.trackingConfig') !== false) {
-                    $inline_script = $data;
-                    break;
-                }
-            }
-            if (strpos($inline_script, '"detectedZaraz":true') !== false) {
-                return 'zaraz';
-            }
-        }
-        
-        // Check for Google Analytics
-        if (wp_script_is('gtag', 'registered') || wp_script_is('gtag', 'enqueued')) {
-            return 'gtag';
-        }
-        return 'none';
+    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+
+    if ($environment !== 'production') {
+        $wp_admin_bar->add_node(array(
+            'id'    => 'nova-env-warning',
+            'title' => '<span style="background:#dc3232; color:#fff; padding:0 8px; border-radius:3px; font-weight:bold;">Env: Dev</span>',
+            'href'  => admin_url('options-general.php?page=nova-core-settings&tab=tracking'),
+            'meta'  => array(
+                'title' => 'Nova Core is in Development mode - tracking data will also be logged to console'
+            )
+        ));
     }
-    
-    return $configured_mode;
+}
+
+// Add CSS for admin bar warning
+add_action('admin_head', 'nova_core_admin_bar_styles');
+add_action('wp_head', 'nova_core_admin_bar_styles');
+function nova_core_admin_bar_styles() {
+    $options = get_option('nova_core_tracking_options');
+    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+
+    if ($environment !== 'production' && is_admin_bar_showing()) {
+        ?>
+        <style>
+            #wpadminbar #wp-admin-bar-nova-env-warning > .ab-item {
+                background: transparent !important;
+            }
+            #wpadminbar #wp-admin-bar-nova-env-warning:hover > .ab-item span {
+                background: #b52727 !important;
+            }
+        </style>
+        <?php
+    }
 }
 
 // Register settings
@@ -62,9 +69,9 @@ function nova_core_register_settings() {
     );
 
     add_settings_field(
-        'tracking_mode',
-        'Tracking Mode',
-        'nova_core_tracking_mode_callback',
+        'environment',
+        'Environment',
+        'nova_core_environment_callback',
         'nova-core-tracking',
         'nova_core_tracking_section'
     );
@@ -222,15 +229,21 @@ function nova_core_settings_page() {
             </form>
         <?php else: ?>
             <div class="nova-core-instructions">
-                <h2>Zaraz Configuration</h2>
-                
-                <h3>Setting Up Tracking Tools</h3>
+                <h2>Tracking Setup</h2>
+
+                <h3>Analytics Backends</h3>
+                <p>Nova Core sends tracking events to all available backends:</p>
+                <ul>
+                    <li><strong>Plausible:</strong> Implemented via the official <a href="https://wordpress.org/plugins/plausible-analytics/" target="_blank">Plausible Analytics WordPress plugin</a></li>
+                    <li><strong>Google Analytics:</strong> Implemented via Cloudflare Zaraz</li>
+                </ul>
+
+                <h3>Zaraz Configuration (for Google Analytics)</h3>
                 <ol>
                     <li>In Cloudflare, go to <strong>Zaraz</strong> > <strong>Tools</strong></li>
                     <li>Click <strong>Add Tool</strong></li>
-                    <li>Select <strong>Google Analytics 4</strong> or <strong>Plausible</strong></li>
-                    <li>Configure the tool with your tracking ID/domain</li>
-                    <li>Repeat for additional tracking tools</li>
+                    <li>Select <strong>Google Analytics 4</strong></li>
+                    <li>Configure the tool with your GA4 Measurement ID</li>
                 </ol>
 
                 <h3>Excluding Admin Users</h3>
@@ -283,7 +296,7 @@ function nova_core_settings_page() {
                 </ul>
 
                 <div class="nova-core-note">
-                    <strong>Note:</strong> All tracking events are automatically suppressed in development mode and will only be logged to the console for testing purposes.
+                    <strong>Note:</strong> Tracking events are always sent to all available backends (Plausible, Zaraz/GA). In development mode, events are also logged to the browser console for debugging. A red "Env: Dev" warning will appear in the admin bar when not in production mode.
                 </div>
             </div>
 
@@ -320,24 +333,13 @@ function nova_core_settings_page() {
 // Section callbacks
 function nova_core_tracking_section_callback() {
     $options = get_option('nova_core_tracking_options');
-    $current_mode = nova_core_get_current_tracking_mode();
-    $is_auto = isset($options['tracking_mode']) && $options['tracking_mode'] === 'auto';
-    
-    // Only show current mode if auto-detect is enabled
-    if ($is_auto) {
-        $detection_status = $current_mode === 'none' ? 'failed' : 'success';
-        $status_color = $detection_status === 'failed' ? '#dc3232' : '#46b450';
-        ?>
-        <p>Configure how tracking is implemented on your site.</p>
-        <p>
-            <strong>Auto-Detect Status:</strong> 
-            <span style="display: inline-block; padding: 3px 8px; background: <?php echo esc_attr($status_color); ?>; color: white; border-radius: 3px;">
-                <?php echo $detection_status === 'failed' ? 'No tracking detected' : 'Tracking detected'; ?>
-            </span>
-        </p>
-        <?php
-    } else {
-        echo '<p>Configure how tracking is implemented on your site.</p>';
+    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+
+    echo '<p>Configure tracking environment for your site.</p>';
+    echo '<p><strong>Note:</strong> Tracking is always enabled and sends data to all available backends (Plausible via plugin, Google Analytics via Zaraz).</p>';
+
+    if ($environment !== 'production') {
+        echo '<p style="color: #dc3232; font-weight: bold;">⚠️ Development mode is active - events will also be logged to the browser console.</p>';
     }
 }
 
@@ -346,43 +348,20 @@ function nova_core_features_section_callback() {
 }
 
 // Field callbacks
-function nova_core_tracking_mode_callback() {
+function nova_core_environment_callback() {
     $options = get_option('nova_core_tracking_options');
-    $tracking_mode = isset($options['tracking_mode']) ? $options['tracking_mode'] : 'auto';
     $environment = isset($options['environment']) ? $options['environment'] : 'production';
-    $tracking_enabled = isset($options['tracking_enabled']) ? $options['tracking_enabled'] : 1;
     ?>
     <div class="nova-core-tracking-settings">
         <div class="nova-core-setting-row">
-            <label>
-                <strong>Environment:</strong>
-                <select name="nova_core_tracking_options[environment]">
-                    <option value="production" <?php selected($environment, 'production'); ?>>Production</option>
-                    <option value="development" <?php selected($environment, 'development'); ?>>Development</option>
-                </select>
-            </label>
-            <p class="description">Select whether this is a production or development environment.</p>
-        </div>
-
-        <div class="nova-core-setting-row">
-            <label>
-                <strong>Global Tracking:</strong>
-                <input type="checkbox" name="nova_core_tracking_options[tracking_enabled]" value="1" <?php checked($tracking_enabled, 1); ?>>
-                Enable tracking
-            </label>
-            <p class="description">When disabled, no tracking will be implemented regardless of other settings.</p>
-        </div>
-
-        <div class="nova-core-setting-row">
-            <label>
-                <strong>Tracking Mode:</strong>
-                <select name="nova_core_tracking_options[tracking_mode]">
-                    <option value="auto" <?php selected($tracking_mode, 'auto'); ?>>Auto-detect</option>
-                    <option value="zaraz" <?php selected($tracking_mode, 'zaraz'); ?>>Zaraz</option>
-                    <option value="gtag" <?php selected($tracking_mode, 'gtag'); ?>>Google Analytics</option>
-                </select>
-            </label>
-            <p class="description">Choose how tracking should be implemented. Auto-detect will attempt to use the best available option.</p>
+            <select name="nova_core_tracking_options[environment]">
+                <option value="production" <?php selected($environment, 'production'); ?>>Production</option>
+                <option value="development" <?php selected($environment, 'development'); ?>>Development</option>
+            </select>
+            <p class="description">
+                <strong>Production:</strong> Events are sent to tracking backends only.<br>
+                <strong>Development:</strong> Events are sent to tracking backends AND logged to browser console for debugging.
+            </p>
         </div>
     </div>
 
@@ -392,21 +371,9 @@ function nova_core_tracking_mode_callback() {
         }
         .nova-core-setting-row {
             margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eee;
         }
-        .nova-core-setting-row:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        .nova-core-setting-row label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        .nova-core-setting-row select,
-        .nova-core-setting-row input[type="checkbox"] {
-            margin-top: 5px;
+        .nova-core-setting-row select {
+            margin-bottom: 10px;
         }
     </style>
     <?php

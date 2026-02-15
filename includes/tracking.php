@@ -35,23 +35,21 @@ add_action('wp_enqueue_scripts', 'nova_enqueue_tracking_script');
 function nova_enqueue_tracking_script() {
     $options = get_option('nova_core_tracking_options');
     $environment = isset($options['environment']) ? $options['environment'] : 'production';
-    $tracking_enabled = isset($options['tracking_enabled']) ? $options['tracking_enabled'] : 1;
 
     wp_enqueue_script(
         'nova-tracking',
         plugin_dir_url(__FILE__) . '../assets/js/tracking.js',
         array(),
-        '1.0',
+        '1.0.1',
         true
     );
 
     // Pass essential settings to JS
     $js_config = array(
         'pageTitle' => nova_get_page_title(),
-        'environment' => $environment,
-        'trackingEnabled' => (bool)$tracking_enabled
+        'environment' => $environment
     );
-    
+
     // Pass settings to JS using wp_localize_script
     wp_localize_script('nova-tracking', 'novaCoreConfig', $js_config);
 }
