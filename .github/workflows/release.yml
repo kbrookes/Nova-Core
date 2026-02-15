@@ -1,0 +1,132 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - '[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get tag version
+        id: tag
+        run: |
+          # Get the tag name, strip leading 'v' if present
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          TAG_VERSION="${TAG_NAME#v}"
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "tag_version=${TAG_VERSION}" >> $GITHUB_OUTPUT
+          echo "Tag: ${TAG_NAME}, Version: ${TAG_VERSION}"
+
+      - name: Get plugin info
+        id: plugin
+        run: |
+          # Extract plugin slug from directory name
+          PLUGIN_SLUG=$(basename "$GITHUB_WORKSPACE")
+          echo "slug=${PLUGIN_SLUG}" >> $GITHUB_OUTPUT
+          
+          # Find the main plugin file (file containing Plugin Name header)
+          MAIN_FILE=$(grep -l "Plugin Name:" *.php 2>/dev/null | head -1)
+          if [ -z "$MAIN_FILE" ]; then
+            echo "Error: Could not find main plugin file with 'Plugin Name:' header"
+            exit 1
+          fi
+          echo "main_file=${MAIN_FILE}" >> $GITHUB_OUTPUT
+          echo "Found main plugin file: ${MAIN_FILE}"
+          
+          # Extract version from plugin header
+          PLUGIN_VERSION=$(grep -oP "Version:\s*\K[0-9]+\.[0-9]+\.[0-9]+[^\s]*" "$MAIN_FILE")
+          echo "version=${PLUGIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "Plugin version: ${PLUGIN_VERSION}"
+
+      - name: Verify version match
+        run: |
+          TAG_VERSION="${{ steps.tag.outputs.tag_version }}"
+          PLUGIN_VERSION="${{ steps.plugin.outputs.version }}"
+          
+          if [ "$TAG_VERSION" != "$PLUGIN_VERSION" ]; then
+            echo "Error: Tag version (${TAG_VERSION}) does not match plugin header version (${PLUGIN_VERSION})"
+            echo "Please ensure the plugin Version header matches your tag."
+            exit 1
+          fi
+          echo "Version verified: ${TAG_VERSION}"
+
+      - name: Build plugin ZIP
+        run: |
+          PLUGIN_SLUG="${{ steps.plugin.outputs.slug }}"
+          TAG_VERSION="${{ steps.tag.outputs.tag_version }}"
+          ZIP_NAME="${PLUGIN_SLUG}-${TAG_VERSION}.zip"
+          
+          # Create build directory
+          mkdir -p build/${PLUGIN_SLUG}
+          
+          # Copy files, excluding dev/build artefacts
+          rsync -av --progress . build/${PLUGIN_SLUG}/ \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='.gitignore' \
+            --exclude='.gitattributes' \
+            --exclude='node_modules' \
+            --exclude='vendor' \
+            --exclude='tests' \
+            --exclude='test' \
+            --exclude='phpunit.xml' \
+            --exclude='phpunit.xml.dist' \
+            --exclude='phpcs.xml' \
+            --exclude='phpcs.xml.dist' \
+            --exclude='.phpcs.xml' \
+            --exclude='.phpcs.xml.dist' \
+            --exclude='composer.json' \
+            --exclude='composer.lock' \
+            --exclude='package.json' \
+            --exclude='package-lock.json' \
+            --exclude='yarn.lock' \
+            --exclude='webpack.config.js' \
+            --exclude='gulpfile.js' \
+            --exclude='Gruntfile.js' \
+            --exclude='.editorconfig' \
+            --exclude='.eslintrc*' \
+            --exclude='.prettierrc*' \
+            --exclude='.stylelintrc*' \
+            --exclude='*.map' \
+            --exclude='*.log' \
+            --exclude='.env*' \
+            --exclude='.DS_Store' \
+            --exclude='Thumbs.db' \
+            --exclude='build' \
+            --exclude='dist' \
+            --exclude='*.md' \
+            --exclude='LICENSE' \
+            --exclude='Makefile'
+          
+          # Create ZIP
+          cd build
+          zip -r "../${ZIP_NAME}" "${PLUGIN_SLUG}"
+          cd ..
+          
+          echo "zip_name=${ZIP_NAME}" >> $GITHUB_ENV
+          echo "Created: ${ZIP_NAME}"
+          ls -la "${ZIP_NAME}"
+
+      - name: Create or Update Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag_name }}
+          name: ${{ steps.plugin.outputs.slug }} v${{ steps.tag.outputs.tag_version }}
+          draft: false
+          prerelease: false
+          files: ${{ env.zip_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
