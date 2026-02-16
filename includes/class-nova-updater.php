@@ -82,26 +82,72 @@ class Nova_GitHub_Updater {
     private $github_data = null;
 
     /**
+     * Icon URLs for plugin display
+     *
+     * @var array
+     */
+    private $icons = array();
+
+    /**
      * Constructor
      *
      * @param string      $plugin_file Path to main plugin file (__FILE__).
      * @param string      $owner       GitHub repository owner.
      * @param string      $repo        GitHub repository name.
-     * @param string|null $asset_name  Optional specific asset filename to use.
+     * @param array       $options     Optional settings: 'asset_name', 'icons'.
      */
-    public function __construct($plugin_file, $owner, $repo, $asset_name = null) {
+    public function __construct($plugin_file, $owner, $repo, $options = array()) {
         $this->plugin_file     = $plugin_file;
         $this->owner           = $owner;
         $this->repo            = $repo;
-        $this->asset_name      = $asset_name;
         $this->plugin_basename = plugin_basename($plugin_file);
         $this->plugin_slug     = dirname($this->plugin_basename);
         $this->cache_key       = 'nova_updater_' . md5($this->plugin_basename);
+
+        // Handle options (backwards compatible with old asset_name string param)
+        if (is_string($options)) {
+            $this->asset_name = $options;
+        } elseif (is_array($options)) {
+            $this->asset_name = isset($options['asset_name']) ? $options['asset_name'] : null;
+            $this->icons      = isset($options['icons']) ? $options['icons'] : array();
+        }
+
+        // Auto-detect icons from plugin assets folder if not provided
+        if (empty($this->icons)) {
+            $this->icons = $this->detect_icons();
+        }
 
         // Only run in admin context
         if (is_admin()) {
             $this->init_hooks();
         }
+    }
+
+    /**
+     * Auto-detect icon files from plugin assets folder
+     *
+     * @return array Icon URLs keyed by size.
+     */
+    private function detect_icons() {
+        $icons = array();
+        $plugin_dir = dirname($this->plugin_file);
+        $plugin_url = plugins_url('', $this->plugin_file);
+
+        // Check for common icon files in assets folder
+        $icon_files = array(
+            'svg'     => 'assets/icon.svg',
+            '2x'      => 'assets/icon-256x256.png',
+            '1x'      => 'assets/icon-128x128.png',
+            'default' => 'assets/icon-128x128.png',
+        );
+
+        foreach ($icon_files as $key => $path) {
+            if (file_exists($plugin_dir . '/' . $path)) {
+                $icons[$key] = $plugin_url . '/' . $path;
+            }
+        }
+
+        return $icons;
     }
 
     /**
@@ -369,7 +415,7 @@ class Nova_GitHub_Updater {
                     'new_version' => $remote_version,
                     'url'         => $github_data['html_url'],
                     'package'     => $download_url,
-                    'icons'       => array(),
+                    'icons'       => $this->icons,
                     'banners'     => array(),
                     'tested'      => '',
                     'requires'    => '',
@@ -462,6 +508,7 @@ class Nova_GitHub_Updater {
                 'changelog'   => $changelog,
             ),
             'download_link'     => $this->add_token_to_url($this->get_download_url($github_data)),
+            'icons'             => $this->icons,
             'banners'           => array(),
         );
 
