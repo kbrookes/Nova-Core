@@ -82,15 +82,21 @@ function nova_core_post_options_metabox_callback($post) {
     ?>
     <div class="nova-post-options">
         <?php if ($featured_enabled) : ?>
-            <p class="nova-post-option">
-                <label>
-                    <input type="checkbox" 
-                           name="featured_post" 
-                           value="true" 
-                           <?php checked($featured_post, 'true'); ?> />
+            <div class="nova-post-option nova-toggle-field">
+                <label class="nova-toggle-label">
                     <strong>Featured post?</strong>
                 </label>
-            </p>
+                <label class="nova-toggle-switch">
+                    <input type="checkbox"
+                           name="featured_post"
+                           value="true"
+                           <?php checked($featured_post, 'true'); ?> />
+                    <span class="nova-toggle-slider">
+                        <span class="nova-toggle-on">Yes</span>
+                        <span class="nova-toggle-off">No</span>
+                    </span>
+                </label>
+            </div>
         <?php endif; ?>
 
         <?php if ($product_enabled) : ?>
@@ -143,6 +149,89 @@ function nova_core_post_options_metabox_callback($post) {
         /* Select2 overrides for metabox */
         .nova-post-options .select2-container {
             width: 100% !important;
+        }
+
+        /* ACF-style toggle switch */
+        .nova-toggle-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .nova-toggle-label {
+            flex: 1;
+        }
+        .nova-toggle-switch {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .nova-toggle-switch input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .nova-toggle-slider {
+            display: flex;
+            width: 70px;
+            height: 28px;
+            background: #a3b9c8;
+            border-radius: 14px;
+            position: relative;
+            transition: background 0.2s ease;
+            overflow: hidden;
+        }
+        .nova-toggle-slider::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            z-index: 2;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .nova-toggle-on,
+        .nova-toggle-off {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #fff;
+            z-index: 1;
+            transition: opacity 0.2s ease;
+        }
+        .nova-toggle-on {
+            opacity: 0;
+            padding-left: 4px;
+        }
+        .nova-toggle-off {
+            opacity: 1;
+            padding-right: 4px;
+        }
+        /* Checked state */
+        .nova-toggle-switch input:checked + .nova-toggle-slider {
+            background: #00a0d2;
+        }
+        .nova-toggle-switch input:checked + .nova-toggle-slider::before {
+            transform: translateX(42px);
+        }
+        .nova-toggle-switch input:checked + .nova-toggle-slider .nova-toggle-on {
+            opacity: 1;
+        }
+        .nova-toggle-switch input:checked + .nova-toggle-slider .nova-toggle-off {
+            opacity: 0;
+        }
+        /* Focus state */
+        .nova-toggle-switch input:focus + .nova-toggle-slider {
+            box-shadow: 0 0 0 2px #fff, 0 0 0 4px #00a0d2;
         }
     </style>
     <?php

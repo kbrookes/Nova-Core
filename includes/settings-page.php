@@ -204,13 +204,158 @@ function nova_core_settings_page() {
                 ?>
             </form>
         <?php elseif ($active_tab == 'blog'): ?>
-            <form action="options.php" method="post">
-                <?php
-                settings_fields('nova_core_blog_settings');
-                do_settings_sections('nova-core-blog');
-                submit_button('Save Blog Settings');
-                ?>
-            </form>
+            <div class="nova-blog-settings-wrap">
+                <div class="nova-blog-settings-main">
+                    <form action="options.php" method="post">
+                        <?php
+                        settings_fields('nova_core_blog_settings');
+                        do_settings_sections('nova-core-blog');
+                        submit_button('Save Blog Settings');
+                        ?>
+                    </form>
+                </div>
+                <div class="nova-blog-settings-sidebar">
+                    <div class="nova-meta-reference">
+                        <h3>Meta Key Reference</h3>
+                        <p class="description">Use these meta keys in Bricks Builder queries and dynamic data.</p>
+
+                        <div class="nova-meta-item">
+                            <h4>Featured Post</h4>
+                            <table class="nova-meta-table">
+                                <tr>
+                                    <th>Meta Key</th>
+                                    <td><code>featured_post</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Type</th>
+                                    <td>String</td>
+                                </tr>
+                                <tr>
+                                    <th>Values</th>
+                                    <td><code>true</code> | <code>false</code></td>
+                                </tr>
+                            </table>
+                            <p class="nova-meta-example">
+                                <strong>Bricks Query:</strong><br>
+                                <code>meta_key: featured_post</code><br>
+                                <code>meta_value: true</code>
+                            </p>
+                        </div>
+
+                        <div class="nova-meta-item">
+                            <h4>Link to Product</h4>
+                            <table class="nova-meta-table">
+                                <tr>
+                                    <th>Meta Key</th>
+                                    <td><code>link_to_product</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Type</th>
+                                    <td>String (relative URL)</td>
+                                </tr>
+                                <tr>
+                                    <th>Example</th>
+                                    <td><code>/product/example-product/</code></td>
+                                </tr>
+                            </table>
+                            <p class="nova-meta-example">
+                                <strong>Usage:</strong><br>
+                                Outputs the product URL path without the domain. Combine with <code>site_url()</code> or use directly in links.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>
+                .nova-blog-settings-wrap {
+                    display: flex;
+                    gap: 30px;
+                    align-items: flex-start;
+                    margin-top: 20px;
+                }
+                .nova-blog-settings-main {
+                    flex: 1;
+                    max-width: 600px;
+                }
+                .nova-blog-settings-sidebar {
+                    width: 320px;
+                    flex-shrink: 0;
+                }
+                .nova-meta-reference {
+                    background: #fff;
+                    border: 1px solid #c3c4c7;
+                    border-radius: 4px;
+                    padding: 15px 20px;
+                }
+                .nova-meta-reference h3 {
+                    margin: 0 0 5px 0;
+                    padding: 0;
+                    font-size: 14px;
+                }
+                .nova-meta-reference > .description {
+                    margin: 0 0 15px 0;
+                    font-style: italic;
+                }
+                .nova-meta-item {
+                    background: #f6f7f7;
+                    border-radius: 4px;
+                    padding: 12px 15px;
+                    margin-bottom: 15px;
+                }
+                .nova-meta-item:last-child {
+                    margin-bottom: 0;
+                }
+                .nova-meta-item h4 {
+                    margin: 0 0 10px 0;
+                    font-size: 13px;
+                    color: #1d2327;
+                }
+                .nova-meta-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-size: 12px;
+                    margin-bottom: 10px;
+                }
+                .nova-meta-table th {
+                    text-align: left;
+                    width: 70px;
+                    padding: 4px 0;
+                    color: #646970;
+                    font-weight: normal;
+                }
+                .nova-meta-table td {
+                    padding: 4px 0;
+                }
+                .nova-meta-table code {
+                    background: #fff;
+                    padding: 2px 6px;
+                    border-radius: 3px;
+                    font-size: 11px;
+                }
+                .nova-meta-example {
+                    font-size: 11px;
+                    color: #646970;
+                    margin: 0;
+                    padding-top: 8px;
+                    border-top: 1px solid #dcdcde;
+                }
+                .nova-meta-example code {
+                    background: #fff;
+                    padding: 1px 5px;
+                    border-radius: 3px;
+                    font-size: 11px;
+                }
+                @media screen and (max-width: 1200px) {
+                    .nova-blog-settings-wrap {
+                        flex-direction: column;
+                    }
+                    .nova-blog-settings-sidebar {
+                        width: 100%;
+                        max-width: 600px;
+                    }
+                }
+            </style>
         <?php else: ?>
             <div class="nova-core-instructions">
                 <h2>Tracking Setup</h2>
