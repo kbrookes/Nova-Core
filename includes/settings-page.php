@@ -135,39 +135,23 @@ function nova_core_register_settings() {
     // Blog Settings
     add_settings_section(
         'nova_core_blog_section',
-        'Blog Settings',
+        'Blog Post Options',
         'nova_core_blog_section_callback',
         'nova-core-blog'
     );
 
     add_settings_field(
-        'blog_posts_per_page',
-        'Posts Per Page',
-        'nova_core_blog_posts_per_page_callback',
+        'enable_featured_post',
+        'Enable featured post?',
+        'nova_core_enable_featured_post_callback',
         'nova-core-blog',
         'nova_core_blog_section'
     );
 
     add_settings_field(
-        'blog_excerpt_length',
-        'Excerpt Length',
-        'nova_core_blog_excerpt_length_callback',
-        'nova-core-blog',
-        'nova_core_blog_section'
-    );
-
-    add_settings_field(
-        'blog_show_author',
-        'Show Author',
-        'nova_core_blog_show_author_callback',
-        'nova-core-blog',
-        'nova_core_blog_section'
-    );
-
-    add_settings_field(
-        'blog_show_date',
-        'Show Date',
-        'nova_core_blog_show_date_callback',
+        'enable_link_to_product',
+        'Enable link to product?',
+        'nova_core_enable_link_to_product_callback',
         'nova-core-blog',
         'nova_core_blog_section'
     );
@@ -442,43 +426,27 @@ function nova_core_move_rankmath_metabox_callback() {
     <?php
 }
 
-// Add new callback functions at the end of the file
+// Blog settings callbacks
 function nova_core_blog_section_callback() {
-    echo '<p>Configure your blog display settings.</p>';
+    echo '<p>Enable post options that will appear in the Post Options metabox on the post edit screen.</p>';
 }
 
-function nova_core_blog_posts_per_page_callback() {
+function nova_core_enable_featured_post_callback() {
     $options = get_option('nova_core_blog_options');
-    $value = isset($options['posts_per_page']) ? $options['posts_per_page'] : 10;
+    // Default to enabled (1)
+    $value = isset($options['enable_featured_post']) ? $options['enable_featured_post'] : 1;
     ?>
-    <input type="number" name="nova_core_blog_options[posts_per_page]" value="<?php echo esc_attr($value); ?>" min="1" max="100" />
-    <p class="description">Number of posts to display per page on the blog archive.</p>
+    <input type="checkbox" name="nova_core_blog_options[enable_featured_post]" value="1" <?php checked(1, $value); ?> />
+    <p class="description">Adds a "Featured post?" toggle to blog posts (meta key: <code>featured_post</code>).</p>
     <?php
 }
 
-function nova_core_blog_excerpt_length_callback() {
+function nova_core_enable_link_to_product_callback() {
     $options = get_option('nova_core_blog_options');
-    $value = isset($options['excerpt_length']) ? $options['excerpt_length'] : 55;
+    // Default to disabled (0)
+    $value = isset($options['enable_link_to_product']) ? $options['enable_link_to_product'] : 0;
     ?>
-    <input type="number" name="nova_core_blog_options[excerpt_length]" value="<?php echo esc_attr($value); ?>" min="10" max="200" />
-    <p class="description">Number of words to show in post excerpts.</p>
-    <?php
-}
-
-function nova_core_blog_show_author_callback() {
-    $options = get_option('nova_core_blog_options');
-    $value = isset($options['show_author']) ? $options['show_author'] : 1;
-    ?>
-    <input type="checkbox" name="nova_core_blog_options[show_author]" value="1" <?php checked(1, $value); ?> />
-    <p class="description">Display the author name on blog posts.</p>
-    <?php
-}
-
-function nova_core_blog_show_date_callback() {
-    $options = get_option('nova_core_blog_options');
-    $value = isset($options['show_date']) ? $options['show_date'] : 1;
-    ?>
-    <input type="checkbox" name="nova_core_blog_options[show_date]" value="1" <?php checked(1, $value); ?> />
-    <p class="description">Display the post date on blog posts.</p>
+    <input type="checkbox" name="nova_core_blog_options[enable_link_to_product]" value="1" <?php checked(1, $value); ?> />
+    <p class="description">Adds a "Link to product" dropdown to blog posts (meta key: <code>link_to_product</code>).</p>
     <?php
 }

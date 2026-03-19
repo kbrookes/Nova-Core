@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.43
+ * Version: 0.1.44
  * Author: Nova Strategic
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -44,3 +44,4 @@ require_once __DIR__ . '/includes/settings-page.php';
 require_once __DIR__ . '/includes/zaraz-cookie.php';
 require_once __DIR__ . '/includes/site-settings.php';
 require_once __DIR__ . '/includes/rankmath-metabox.php';
+require_once __DIR__ . '/includes/post-options.php';
