@@ -12,6 +12,28 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Get the product link URL for the current post
+ *
+ * Use in Bricks Builder: {echo:nova_get_product_link()}
+ *
+ * @param int|null $post_id Optional post ID. Defaults to current post.
+ * @return string Full product URL or empty string if not set.
+ */
+function nova_get_product_link($post_id = null) {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+
+    $relative_url = get_post_meta($post_id, 'link_to_product', true);
+
+    if (empty($relative_url)) {
+        return '';
+    }
+
+    return home_url($relative_url);
+}
+
+/**
  * Register post meta fields for REST API and Bricks Builder compatibility
  */
 add_action('init', 'nova_core_register_post_meta');

@@ -258,9 +258,27 @@ function nova_core_settings_page() {
                                     <td><code>/product/example-product/</code></td>
                                 </tr>
                             </table>
+                        </div>
+
+                        <div class="nova-meta-item nova-meta-function">
+                            <h4>Helper Function</h4>
+                            <table class="nova-meta-table">
+                                <tr>
+                                    <th>Function</th>
+                                    <td><code>nova_get_product_link()</code></td>
+                                </tr>
+                                <tr>
+                                    <th>Returns</th>
+                                    <td>Full URL or empty string</td>
+                                </tr>
+                            </table>
                             <p class="nova-meta-example">
-                                <strong>Usage:</strong><br>
-                                Outputs the product URL path without the domain. Combine with <code>site_url()</code> or use directly in links.
+                                <strong>Bricks Button Link:</strong><br>
+                                <code>{echo:nova_get_product_link()}</code>
+                            </p>
+                            <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
+                                <strong>Bricks Condition:</strong><br>
+                                Dynamic data <code>is not empty</code> to show/hide element
                             </p>
                         </div>
                     </div>
