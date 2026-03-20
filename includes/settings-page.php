@@ -261,23 +261,27 @@ function nova_core_settings_page() {
                         </div>
 
                         <div class="nova-meta-item nova-meta-function">
-                            <h4>Helper Function</h4>
+                            <h4>Bricks Dynamic Tag</h4>
                             <table class="nova-meta-table">
                                 <tr>
-                                    <th>Function</th>
-                                    <td><code>nova_get_product_link()</code></td>
+                                    <th>Tag</th>
+                                    <td><code>{nova_product_link}</code></td>
                                 </tr>
                                 <tr>
                                     <th>Returns</th>
                                     <td>Full URL or empty string</td>
                                 </tr>
+                                <tr>
+                                    <th>Picker</th>
+                                    <td>Nova Core &rarr; Product Link</td>
+                                </tr>
                             </table>
                             <p class="nova-meta-example">
-                                <strong>Bricks Button Link:</strong><br>
-                                <code>{echo:nova_get_product_link()}</code>
+                                <strong>Button Link:</strong><br>
+                                Select from dynamic data picker or type <code>{nova_product_link}</code>
                             </p>
                             <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
-                                <strong>Bricks Condition:</strong><br>
+                                <strong>Condition:</strong><br>
                                 Dynamic data <code>is not empty</code> to show/hide element
                             </p>
                         </div>

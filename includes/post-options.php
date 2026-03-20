@@ -14,7 +14,7 @@ defined('ABSPATH') || exit;
 /**
  * Get the product link URL for the current post
  *
- * Use in Bricks Builder: {echo:nova_get_product_link()}
+ * Use in Bricks Builder: {nova_product_link}
  *
  * @param int|null $post_id Optional post ID. Defaults to current post.
  * @return string Full product URL or empty string if not set.
@@ -31,6 +31,48 @@ function nova_get_product_link($post_id = null) {
     }
 
     return home_url($relative_url);
+}
+
+/**
+ * Register Nova dynamic data tags with Bricks Builder
+ */
+add_filter('bricks/dynamic_tags_list', 'nova_core_register_bricks_tags');
+function nova_core_register_bricks_tags($tags) {
+    $tags[] = array(
+        'name'  => '{nova_product_link}',
+        'label' => 'Product Link',
+        'group' => 'Nova Core',
+    );
+
+    return $tags;
+}
+
+/**
+ * Render Nova dynamic data tags in Bricks Builder
+ */
+add_filter('bricks/dynamic_data/render_tag', 'nova_core_render_bricks_tag', 10, 3);
+function nova_core_render_bricks_tag($tag, $post, $context) {
+    if ($tag === 'nova_product_link') {
+        $post_id = is_object($post) ? $post->ID : $post;
+        return nova_get_product_link($post_id);
+    }
+
+    return $tag;
+}
+
+/**
+ * Handle Nova dynamic data tags within content strings
+ */
+add_filter('bricks/dynamic_data/render_content', 'nova_core_render_bricks_content', 10, 3);
+function nova_core_render_bricks_content($content, $post, $context) {
+    if (strpos($content, '{nova_product_link}') === false) {
+        return $content;
+    }
+
+    $post_id = is_object($post) ? $post->ID : $post;
+    $value = nova_get_product_link($post_id);
+
+    return str_replace('{nova_product_link}', $value, $content);
 }
 
 /**
