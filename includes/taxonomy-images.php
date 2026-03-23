@@ -184,7 +184,11 @@ function nova_taxonomy_image_js() {
  */
 function nova_get_term_image($term_id = null, $size = 'full', $return = 'url') {
     if (!$term_id) {
-        $term_id = get_queried_object_id();
+        // Get the queried object and verify it's a term
+        $queried = get_queried_object();
+        if ($queried instanceof WP_Term) {
+            $term_id = $queried->term_id;
+        }
     }
 
     if (!$term_id) {
@@ -275,26 +279,35 @@ function nova_core_render_term_image_bricks_tag($tag, $post, $context) {
 
 /**
  * Handle Nova term image tags within content strings
+ *
+ * Priority 5 to run before other Bricks filters
  */
 add_filter('bricks/dynamic_data/render_content', 'nova_core_render_term_image_bricks_content', 5, 3);
 function nova_core_render_term_image_bricks_content($content, $post, $context) {
-    // Check for our tags using regex to handle any variations
-    if (strpos($content, 'nova_term_image') === false) {
+    // Quick check - bail early if our tag isn't present
+    if (strpos($content, '{nova_term_image') === false) {
         return $content;
     }
 
+    // Get term ID from context or queried object
     $term_id = nova_get_current_term_id($context);
 
-    // Handle {nova_term_image} tag
-    if (preg_match('/\{nova_term_image\}/', $content)) {
-        $url = nova_get_term_image($term_id, 'full', 'url');
-        $content = preg_replace('/\{nova_term_image\}/', $url ? $url : '', $content);
+    // Handle {nova_term_image} tag - replace with URL or empty string
+    if (strpos($content, '{nova_term_image}') !== false) {
+        $url = '';
+        if ($term_id) {
+            $url = nova_get_term_image($term_id, 'full', 'url');
+        }
+        $content = str_replace('{nova_term_image}', $url ? $url : '', $content);
     }
 
     // Handle {nova_term_image_id} tag
-    if (preg_match('/\{nova_term_image_id\}/', $content)) {
-        $id = nova_get_term_image($term_id, 'full', 'id');
-        $content = preg_replace('/\{nova_term_image_id\}/', $id ? (string) $id : '', $content);
+    if (strpos($content, '{nova_term_image_id}') !== false) {
+        $id = '';
+        if ($term_id) {
+            $id = nova_get_term_image($term_id, 'full', 'id');
+        }
+        $content = str_replace('{nova_term_image_id}', $id ? (string) $id : '', $content);
     }
 
     return $content;
