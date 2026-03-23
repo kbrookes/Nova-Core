@@ -1,11 +1,71 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.40** - [Current Date]
+**Version 0.1.49** - March 2026
 
-## Version History
+## Recent Version History
 
-### Version 0.1.40 - [Current Date]
+### Version 0.1.49 - March 2026
+- Feature/Change: Fix video embeds documentation sidebar visibility
+- Status: ✅ Complete
+- Notes:
+  - Show documentation sidebar on Features tab regardless of toggle state
+
+### Version 0.1.48 - March 2026
+- Feature/Change: Add video embeds feature for YouTube and Vimeo
+- Status: ✅ Complete
+- Notes:
+  - Add `nova_get_video()` helper function for URL normalisation and thumbnails
+  - Support YouTube (watch, youtu.be, embed, shorts) and Vimeo URL formats
+  - Register `{nova_video_url}` and `{nova_video_thumbnail}` Bricks dynamic tags
+  - Add feature toggle in Settings > Features (disabled by default)
+  - Add documentation sidebar with usage examples
+
+### Version 0.1.47 - March 2026
+- Feature/Change: Register nova_product_link as Bricks dynamic data tag
+- Status: ✅ Complete
+- Notes:
+  - Register `{nova_product_link}` with Bricks dynamic data picker
+  - Tag appears under 'Nova Core' group in picker dropdown
+
+### Version 0.1.46 - March 2026
+- Feature/Change: Add nova_get_product_link() helper function
+- Status: ✅ Complete
+- Notes:
+  - Resolves relative product URLs to full URLs
+  - Works with link_to_product meta field
+
+### Version 0.1.45 - March 2026
+- Feature/Change: Add meta key reference sidebar and ACF-style toggle
+- Status: ✅ Complete
+- Notes:
+  - Add developer reference sidebar on Blog Settings tab
+  - Add ACF Pro-style toggle switch for featured post
+
+### Version 0.1.44 - March 2026
+- Feature/Change: Replace blog settings with post options metabox
+- Status: ✅ Complete
+- Notes:
+  - Remove old blog settings (posts per page, excerpt length, etc.)
+  - Add Post Options metabox with featured_post and link_to_product fields
+  - Register meta fields with REST API for Bricks Builder compatibility
+
+### Version 0.1.43 - March 2026
+- Feature/Change: Add plugin icon support to updater
+- Status: ✅ Complete
+- Notes:
+  - Auto-detect icons from assets/ folder (icon-128x128.png, icon-256x256.png, icon.svg)
+  - Icons appear in WordPress update screens
+
+### Version 0.1.41 - March 2026
+- Feature/Change: Custom GitHub updater implementation
+- Status: ✅ Complete
+- Notes:
+  - Built-in updater class (Nova_GitHub_Updater)
+  - No longer requires Git Updater plugin
+  - Supports private repos via GITHUB_UPDATER_TOKEN
+
+### Version 0.1.40 - [Previous]
 - Feature/Change: Simplified tracking approach to always send events to all available backends
 - Status: ✅ Complete
 - Notes:
@@ -14,6 +74,10 @@
   - Simplified PHP configuration to only pass essential page title and environment info
   - This approach works regardless of how tracking scripts are loaded (local or via Zaraz)
   - Aligns with original intent to use Zaraz for loading all tracking scripts
+
+---
+
+## Older Version History
 
 ### Version 0.1.39 - [Current Date]
 - Feature/Change: Improved page detection logic and added debugging for page identification
@@ -147,10 +211,44 @@ Nova Core provides shared functionality across all Nova Strategic websites. It i
 ## Key Responsibilities
 
 - Enqueue structured tracking scripts (Plausible, Zaraz, GA)
-- Register CPTs used across all Nova sites (e.g. Page Types, Services, Resources)
+- Register CPTs used across all Nova sites (Page Types, Services, Resources, Case Studies, Testimonials)
 - Register accompanying ACF field groups via PHP (not ACF GUI)
-- Register utility functions for use in Bricks `{echo}` fields or templates
-- Centralise configuration for reusable filters (e.g., excerpts, query loops)
+- Register utility functions for use in Bricks `{echo}` fields and dynamic tags
+- Provide Bricks Builder dynamic data tags for common operations
+- Manage plugin updates via built-in GitHub updater
+- Centralise configuration for reusable filters
+
+---
+
+## File Structure
+
+```
+Nova-Core/
+├── nova-core.php              # Main plugin file, includes loader
+├── README.md                  # Basic readme
+├── assets/
+│   ├── icon-128x128.png       # Plugin icon (standard)
+│   ├── icon-256x256.png       # Plugin icon (retina)
+│   ├── icon.svg               # Plugin icon (vector)
+│   └── js/
+│       └── tracking.js        # Client-side tracking script
+├── docs/
+│   ├── architecture.md        # Technical architecture
+│   ├── context.md             # This file - development context
+│   └── user-stories.md        # User stories and requirements
+└── includes/
+    ├── acf-fields.php         # ACF field group registration
+    ├── class-nova-updater.php # GitHub release updater
+    ├── cpt-register.php       # Custom post type registration
+    ├── post-options.php       # Post metabox (featured, product link)
+    ├── rankmath-metabox.php   # RankMath metabox positioning
+    ├── settings-page.php      # Admin settings interface
+    ├── site-settings.php      # ACF options page fields
+    ├── tracking.php           # Server-side tracking setup
+    ├── utils.php              # Utility functions
+    ├── video-embeds.php       # Video URL/thumbnail helpers
+    └── zaraz-cookie.php       # Zaraz logged-in user cookie
+```
 
 ---
 
@@ -164,27 +262,63 @@ Nova Core provides shared functionality across all Nova Strategic websites. It i
 
 ---
 
-## Upcoming Features
+## Implemented Features
 
 ### Core Modules
 | Feature | Status | Notes |
 |--------|--------|-------|
-| Structured Tracking | ✅ Ready | Supports Zaraz, gtag, Plausible |
-| Page Type CPT | 🔲 Planned | Replaces legacy layouts |
-| Service CPT | 🔲 Planned | Used for client-facing service structuring |
-| Resource CPT | 🔲 Planned | Tied to downloads, modals, popups |
-| Nova JS Utils | 🔲 Planned | Includes tracking.js, future interactivity logic |
+| Structured Tracking | ✅ Complete | Supports Zaraz, gtag, Plausible |
+| Page Type CPT | ✅ Complete | Toggleable in Features tab |
+| Service CPT | ✅ Complete | Toggleable in Features tab |
+| Resource CPT | ✅ Complete | Toggleable in Features tab |
+| Case Studies CPT | ✅ Complete | Toggleable in Features tab |
+| Testimonials CPT | ✅ Complete | Toggleable in Features tab |
+| Admin Settings Page | ✅ Complete | Tracking, Features, Instructions, Blog Settings tabs |
+| Custom GitHub Updater | ✅ Complete | Self-contained, no plugin dependency |
+| Plugin Icon Support | ✅ Complete | Auto-detected from assets/ folder |
+| Post Options Metabox | ✅ Complete | featured_post, link_to_product fields |
+| Video Embeds | ✅ Complete | YouTube/Vimeo URL normalisation and thumbnails |
+| Bricks Dynamic Tags | ✅ Complete | `{nova_product_link}`, `{nova_video_url}`, `{nova_video_thumbnail}` |
+| ACF Fields (PHP) | ✅ Complete | Case Studies, Site Settings registered via PHP |
+| RankMath Metabox Control | ✅ Complete | Move to bottom option |
+| Zaraz Cookie Management | ✅ Complete | Logged-in user exclusion |
+
+---
+
+## Future Features (Roadmap)
+
+### High Priority
+| Feature | Status | Notes |
+|--------|--------|-------|
+| Form submission tracking | 🔲 Planned | Auto-track Gravity Forms, WPForms, etc. |
+| E-commerce tracking | 🔲 Planned | WooCommerce add to cart, purchase events |
+| Scroll depth tracking | 🔲 Planned | 25%, 50%, 75%, 100% scroll events |
+
+### Medium Priority
+| Feature | Status | Notes |
+|--------|--------|-------|
+| Bricks template library | 🔲 Planned | Pre-built sections using Nova functions |
+| Nova shortcodes | 🔲 Planned | Alternative to Bricks echo for classic editor |
+| Composer autoloading | 🔲 Planned | PSR-4 autoloading for classes |
+| WP CLI commands | 🔲 Planned | CLI for feature toggling, diagnostics |
+
+### Low Priority
+| Feature | Status | Notes |
+|--------|--------|-------|
+| Onboarding wizard | 🔲 Planned | Guided setup for new installs |
+| Multi-language ACF | 🔲 Planned | Polylang/WPML field registration |
+| Performance profiling | 🔲 Planned | Query monitoring, load time checks |
+| Test automation | 🔲 Planned | PHPUnit, Playwright for admin |
 
 ---
 
 ## Known Gaps
 
-1. No admin settings page yet (planned in `settings-page.php`)
-2. ACF fields for CPTs still in legacy GUI form
-3. Tracking settings (mode, domain) hardcoded in script — needs GUI config
-4. Lacks test automation and WP CLI integration
-5. No caching or performance profiling done yet
-6. Zaraz auto-detection not working reliably on production sites with Cloudflare rules
+1. No test automation or WP CLI integration yet
+2. No caching or performance profiling done yet
+3. Zaraz auto-detection can be unreliable with Cloudflare rules (use manual mode)
+4. No form submission auto-tracking
+5. No e-commerce event tracking
 
 ---
 
@@ -194,37 +328,35 @@ Nova Core provides shared functionality across all Nova Strategic websites. It i
 - Tracking uses `getWPPageName()` instead of `document.title`
 - All tracked props follow `{ section, menu, label, page }` structure
 - Console logs in staging are unified using `Object.assign`
-- Future plan is to register all fields using `acf_add_local_field_group()`
+- ACF fields registered using `acf_add_local_field_group()` for Case Studies and Site Settings
 - Each feature file lives in `/includes/` and is loaded via `nova-core.php`
+- Conditional loading: features only load if enabled in settings
+- Bricks dynamic tags registered under "Nova Core" group
 
 ---
 
 ## Development Philosophy
 
-- Use Cursor with `context.md`, `user-stories.md`, and file-level comments to keep AI on track
-- Avoid "magic" behavior — all logic should be legible to humans and LLMs
+- Use AI assistants with `context.md`, `user-stories.md`, and file-level comments to maintain context
+- Avoid "magic" behaviour - all logic should be legible to humans and LLMs
 - Make all major features testable from WP admin after plugin activation
 - Stay lean: no unnecessary admin UIs or interfaces unless justified
+- British English for all admin-facing text
 
 ---
 
-## To Do (Priority)
+## Active To Do
 
-### High
-- Scaffold CPT + ACF modules
-- Create settings API scaffold
-- Connect `tracking.js` config to admin UI
-- Move all standard CPTs + fields into plugin
+### Next Up
+- Add form submission tracking (Gravity Forms, WPForms)
+- Add WooCommerce event tracking
+- Add scroll depth tracking
 
-### Medium
-- Integrate optional Bricks-specific functions
+### Backlog
+- Create Bricks template library
 - Add Composer support for easier autoloading
-- Start version tagging for Git Updater
-
-### Low
-- Add full admin UI for feature toggles
 - Create onboarding wizard for internal installs
-- Support multi-language ACF field registration (via Polylang or WPML)
+- Support multi-language ACF field registration
 
 ---
 
@@ -245,19 +377,24 @@ Nova Core provides shared functionality across all Nova Strategic websites. It i
 
 ---
 
-## Questions to Clarify With Cursor
+## Questions to Consider
 
 - Should this logic be global, scoped to one CPT, or optional?
 - Are we building for theme integration or self-contained logic?
-- If extending Bricks: what would the `{echo}` function or shortcode return?
+- If extending Bricks: what would the `{echo}` function or dynamic tag return?
 
 ---
 
-## Cursor-Specific Notes
+## AI Assistant Notes
 
-- Use this context file to maintain long-term AI memory
+- Use this context file to maintain long-term development memory
 - Refer to `docs/user-stories.md` for real-world scenarios
 - Use comments in each PHP/JS file to provide filename purpose
+- British English for all admin-facing text (no em dashes)
+- Prefer modular `includes/` structure for new features
+- Register Bricks tags under "Nova Core" group
+
+---
 
 ## Documentation Maintenance
 
