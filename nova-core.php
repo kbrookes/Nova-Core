@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.50
+ * Version: 0.1.51
  * Author: Nova Strategic
  * Requires at least: 5.8
  * Requires PHP: 7.4
