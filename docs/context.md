@@ -290,6 +290,7 @@ Nova-Core/
 ### High Priority
 | Feature | Status | Notes |
 |--------|--------|-------|
+| Launch checklist dashboard | 🔲 Planned | Developer checklist widget for pre-launch, launch, and post-launch tasks |
 | Form submission tracking | 🔲 Planned | Auto-track Gravity Forms, WPForms, etc. |
 | E-commerce tracking | 🔲 Planned | WooCommerce add to cart, purchase events |
 | Scroll depth tracking | 🔲 Planned | 25%, 50%, 75%, 100% scroll events |
@@ -312,6 +313,33 @@ Nova-Core/
 
 ---
 
+## Feature Specifications
+
+### Launch Checklist Dashboard
+
+A dashboard widget for developers to track essential tasks across the site lifecycle.
+
+**Checklist Phases:**
+
+| Phase | Example Tasks |
+|-------|---------------|
+| **Development** | ACF fields configured, CPTs registered, forms tested, staging URL set |
+| **Pre-Launch** | Plausible/GA configured, favicon uploaded, SSL active, 404 page created |
+| **Launch** | Environment set to Production, debug disabled, noindex removed, caching enabled |
+| **Post-Launch** | Analytics verified, forms tested live, backups confirmed, client handover |
+
+**Functionality:**
+- Dashboard widget visible to administrators
+- Tasks stored per-site (not synced across installs)
+- Checkbox to mark tasks complete
+- Progress indicator per phase
+- "Hide checklist" option once all tasks complete (dismissible)
+- Tasks should be customisable via filter hook
+
+**Admin Location:** Dashboard widget (high priority placement)
+
+---
+
 ## Known Gaps
 
 1. No test automation or WP CLI integration yet
@@ -319,6 +347,7 @@ Nova-Core/
 3. Zaraz auto-detection can be unreliable with Cloudflare rules (use manual mode)
 4. No form submission auto-tracking
 5. No e-commerce event tracking
+6. No launch checklist or QA workflow
 
 ---
 
