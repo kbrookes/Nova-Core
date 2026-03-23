@@ -253,16 +253,21 @@ function nova_core_register_term_image_bricks_tags($tags) {
  */
 add_filter('bricks/dynamic_data/render_tag', 'nova_core_render_term_image_bricks_tag', 10, 3);
 function nova_core_render_term_image_bricks_tag($tag, $post, $context) {
+    // Only handle our tags
+    if ($tag !== 'nova_term_image' && $tag !== 'nova_term_image_id') {
+        return $tag;
+    }
+
+    $term_id = nova_get_current_term_id($context);
+
     if ($tag === 'nova_term_image') {
-        $term_id = nova_get_current_term_id($context);
         $url = nova_get_term_image($term_id, 'full', 'url');
         return $url ? $url : '';
     }
 
     if ($tag === 'nova_term_image_id') {
-        $term_id = nova_get_current_term_id($context);
         $id = nova_get_term_image($term_id, 'full', 'id');
-        return $id ? $id : '';
+        return $id ? (string) $id : '';
     }
 
     return $tag;
@@ -271,22 +276,25 @@ function nova_core_render_term_image_bricks_tag($tag, $post, $context) {
 /**
  * Handle Nova term image tags within content strings
  */
-add_filter('bricks/dynamic_data/render_content', 'nova_core_render_term_image_bricks_content', 10, 3);
+add_filter('bricks/dynamic_data/render_content', 'nova_core_render_term_image_bricks_content', 5, 3);
 function nova_core_render_term_image_bricks_content($content, $post, $context) {
-    if (strpos($content, '{nova_term_image}') === false && strpos($content, '{nova_term_image_id}') === false) {
+    // Check for our tags using regex to handle any variations
+    if (strpos($content, 'nova_term_image') === false) {
         return $content;
     }
 
     $term_id = nova_get_current_term_id($context);
 
-    if (strpos($content, '{nova_term_image}') !== false) {
+    // Handle {nova_term_image} tag
+    if (preg_match('/\{nova_term_image\}/', $content)) {
         $url = nova_get_term_image($term_id, 'full', 'url');
-        $content = str_replace('{nova_term_image}', $url ? $url : '', $content);
+        $content = preg_replace('/\{nova_term_image\}/', $url ? $url : '', $content);
     }
 
-    if (strpos($content, '{nova_term_image_id}') !== false) {
+    // Handle {nova_term_image_id} tag
+    if (preg_match('/\{nova_term_image_id\}/', $content)) {
         $id = nova_get_term_image($term_id, 'full', 'id');
-        $content = str_replace('{nova_term_image_id}', $id ? $id : '', $content);
+        $content = preg_replace('/\{nova_term_image_id\}/', $id ? (string) $id : '', $content);
     }
 
     return $content;
@@ -296,12 +304,23 @@ function nova_core_render_term_image_bricks_content($content, $post, $context) {
  * Get current term ID from context
  */
 function nova_get_current_term_id($context = null) {
-    // Check if we're in a term loop context
-    if (is_array($context) && isset($context['term'])) {
-        return is_object($context['term']) ? $context['term']->term_id : $context['term'];
+    // Check Bricks loop context for term
+    if (is_array($context)) {
+        // Bricks passes loop item data
+        if (isset($context['term']) && is_object($context['term'])) {
+            return $context['term']->term_id;
+        }
+        if (isset($context['term_id'])) {
+            return (int) $context['term_id'];
+        }
     }
 
-    // Check queried object
+    // Check if context is a WP_Term object directly
+    if ($context instanceof WP_Term) {
+        return $context->term_id;
+    }
+
+    // Check queried object for archive pages
     $queried = get_queried_object();
     if ($queried instanceof WP_Term) {
         return $queried->term_id;
