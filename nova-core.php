@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.47
+ * Version: 0.1.48
  * Author: Nova Strategic
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -45,3 +45,10 @@ require_once __DIR__ . '/includes/zaraz-cookie.php';
 require_once __DIR__ . '/includes/site-settings.php';
 require_once __DIR__ . '/includes/rankmath-metabox.php';
 require_once __DIR__ . '/includes/post-options.php';
+
+// Conditional includes based on feature settings
+$nova_features = get_option('nova_core_features_options', array());
+
+if (!empty($nova_features['enable_video_embeds'])) {
+    require_once __DIR__ . '/includes/video-embeds.php';
+}

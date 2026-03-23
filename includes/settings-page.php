@@ -132,6 +132,14 @@ function nova_core_register_settings() {
         'nova_core_features_section'
     );
 
+    add_settings_field(
+        'enable_video_embeds',
+        'Video Embeds',
+        'nova_core_enable_video_embeds_callback',
+        'nova-core-features',
+        'nova_core_features_section'
+    );
+
     // Blog Settings
     add_settings_section(
         'nova_core_blog_section',
@@ -196,13 +204,46 @@ function nova_core_settings_page() {
                 ?>
             </form>
         <?php elseif ($active_tab == 'features'): ?>
-            <form action="options.php" method="post">
-                <?php
-                settings_fields('nova_core_features_settings');
-                do_settings_sections('nova-core-features');
-                submit_button('Save Feature Settings');
-                ?>
-            </form>
+            <div class="nova-features-settings-wrap">
+                <div class="nova-features-settings-main">
+                    <form action="options.php" method="post">
+                        <?php
+                        settings_fields('nova_core_features_settings');
+                        do_settings_sections('nova-core-features');
+                        submit_button('Save Feature Settings');
+                        ?>
+                    </form>
+                </div>
+                <div class="nova-features-settings-sidebar">
+                    <?php nova_core_render_video_embeds_docs(); ?>
+                </div>
+            </div>
+
+            <style>
+                .nova-features-settings-wrap {
+                    display: flex;
+                    gap: 30px;
+                    align-items: flex-start;
+                    margin-top: 20px;
+                }
+                .nova-features-settings-main {
+                    flex: 1;
+                    max-width: 600px;
+                }
+                .nova-features-settings-sidebar {
+                    width: 380px;
+                    flex-shrink: 0;
+                }
+                @media screen and (max-width: 1200px) {
+                    .nova-features-settings-wrap {
+                        flex-direction: column;
+                    }
+                    .nova-features-settings-sidebar {
+                        width: 100%;
+                        max-width: 600px;
+                    }
+                }
+            </style>
         <?php elseif ($active_tab == 'blog'): ?>
             <div class="nova-blog-settings-wrap">
                 <div class="nova-blog-settings-main">
@@ -593,6 +634,18 @@ function nova_core_move_rankmath_metabox_callback() {
     <?php
 }
 
+function nova_core_enable_video_embeds_callback() {
+    $options = get_option('nova_core_features_options');
+    $enabled = isset($options['enable_video_embeds']) ? $options['enable_video_embeds'] : 0;
+    ?>
+    <label>
+        <input type="checkbox" name="nova_core_features_options[enable_video_embeds]" value="1" <?php checked(1, $enabled); ?>>
+        Enable video embed helpers for YouTube and Vimeo
+    </label>
+    <p class="description">Provides <code>nova_get_video()</code> function and Bricks dynamic tags for video URLs and thumbnails.</p>
+    <?php
+}
+
 // Blog settings callbacks
 function nova_core_blog_section_callback() {
     echo '<p>Enable post options that will appear in the Post Options metabox on the post edit screen.</p>';
@@ -615,5 +668,97 @@ function nova_core_enable_link_to_product_callback() {
     ?>
     <input type="checkbox" name="nova_core_blog_options[enable_link_to_product]" value="1" <?php checked(1, $value); ?> />
     <p class="description">Adds a "Link to product" dropdown to blog posts (meta key: <code>link_to_product</code>).</p>
+    <?php
+}
+
+/**
+ * Render the Video Embeds documentation sidebar
+ */
+function nova_core_render_video_embeds_docs() {
+    $options = get_option('nova_core_features_options');
+    $enabled = isset($options['enable_video_embeds']) ? $options['enable_video_embeds'] : 0;
+
+    if (!$enabled) {
+        return;
+    }
+    ?>
+    <div class="nova-meta-reference">
+        <h3>Video Embeds Reference</h3>
+        <p class="description">Helper functions for YouTube and Vimeo videos in Bricks Builder.</p>
+
+        <div class="nova-meta-item">
+            <h4>Main Function</h4>
+            <table class="nova-meta-table">
+                <tr>
+                    <th>Function</th>
+                    <td><code>nova_get_video($source, $return)</code></td>
+                </tr>
+                <tr>
+                    <th>$source</th>
+                    <td>ACF field name <em>or</em> video URL</td>
+                </tr>
+                <tr>
+                    <th>$return</th>
+                    <td><code>'url'</code> | <code>'thumbnail'</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>Bricks Usage</h4>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 0;">
+                <strong>With ACF field name:</strong><br>
+                <code>{echo:nova_get_video('video_field')}</code><br>
+                <code>{echo:nova_get_video('video_field', 'thumbnail')}</code>
+            </p>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
+                <strong>With direct URL:</strong><br>
+                <code>{echo:nova_get_video('https://youtu.be/abc123')}</code>
+            </p>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>Dynamic Tags</h4>
+            <table class="nova-meta-table">
+                <tr>
+                    <th>Picker</th>
+                    <td>Nova Core &rarr; Video URL / Video Thumbnail</td>
+                </tr>
+            </table>
+            <p class="nova-meta-example">
+                Auto-detects ACF fields named: <code>video</code>, <code>video_url</code>, <code>youtube</code>, <code>vimeo</code>
+            </p>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>Supported URL Formats</h4>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 0;">
+                <strong>YouTube:</strong><br>
+                <code>youtube.com/watch?v=ID</code><br>
+                <code>youtu.be/ID</code><br>
+                <code>youtube.com/embed/ID</code><br>
+                <code>youtube.com/shorts/ID</code>
+            </p>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
+                <strong>Vimeo:</strong><br>
+                <code>vimeo.com/ID</code><br>
+                <code>player.vimeo.com/video/ID</code>
+            </p>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>Output Examples</h4>
+            <table class="nova-meta-table">
+                <tr>
+                    <th>URL</th>
+                    <td><code>https://www.youtube.com/watch?v=abc123</code></td>
+                </tr>
+                <tr>
+                    <th>Thumbnail</th>
+                    <td><code>https://img.youtube.com/vi/abc123/maxresdefault.jpg</code></td>
+                </tr>
+            </table>
+        </div>
+    </div>
     <?php
 }
