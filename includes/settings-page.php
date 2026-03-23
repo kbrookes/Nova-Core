@@ -140,6 +140,14 @@ function nova_core_register_settings() {
         'nova_core_features_section'
     );
 
+    add_settings_field(
+        'enable_taxonomy_images',
+        'Taxonomy Images',
+        'nova_core_enable_taxonomy_images_callback',
+        'nova-core-features',
+        'nova_core_features_section'
+    );
+
     // Blog Settings
     add_settings_section(
         'nova_core_blog_section',
@@ -215,6 +223,7 @@ function nova_core_settings_page() {
                     </form>
                 </div>
                 <div class="nova-features-settings-sidebar">
+                    <?php nova_core_render_taxonomy_images_docs(); ?>
                     <?php nova_core_render_video_embeds_docs(); ?>
                 </div>
             </div>
@@ -646,6 +655,18 @@ function nova_core_enable_video_embeds_callback() {
     <?php
 }
 
+function nova_core_enable_taxonomy_images_callback() {
+    $options = get_option('nova_core_features_options');
+    $enabled = isset($options['enable_taxonomy_images']) ? $options['enable_taxonomy_images'] : 0;
+    ?>
+    <label>
+        <input type="checkbox" name="nova_core_features_options[enable_taxonomy_images]" value="1" <?php checked(1, $enabled); ?>>
+        Enable featured images for taxonomy terms
+    </label>
+    <p class="description">Adds image upload to Categories. Use <code>{nova_term_image}</code> in Bricks or <code>nova_get_term_image()</code> function.</p>
+    <?php
+}
+
 // Blog settings callbacks
 function nova_core_blog_section_callback() {
     echo '<p>Enable post options that will appear in the Post Options metabox on the post edit screen.</p>';
@@ -752,6 +773,88 @@ function nova_core_render_video_embeds_docs() {
                     <td><code>https://img.youtube.com/vi/abc123/maxresdefault.jpg</code></td>
                 </tr>
             </table>
+        </div>
+    </div>
+    <?php
+}
+
+/**
+ * Render the Taxonomy Images documentation sidebar
+ */
+function nova_core_render_taxonomy_images_docs() {
+    ?>
+    <div class="nova-meta-reference">
+        <h3>Taxonomy Images Reference</h3>
+        <p class="description">Add featured images to taxonomy terms (Categories by default).</p>
+
+        <div class="nova-meta-item">
+            <h4>Bricks Dynamic Tags</h4>
+            <table class="nova-meta-table">
+                <tr>
+                    <th>Tag</th>
+                    <td><code>{nova_term_image}</code></td>
+                </tr>
+                <tr>
+                    <th>Returns</th>
+                    <td>Full image URL</td>
+                </tr>
+                <tr>
+                    <th>Picker</th>
+                    <td>Nova Core &rarr; Term Image URL</td>
+                </tr>
+            </table>
+            <p class="nova-meta-example">
+                Works automatically on category archive templates and within term loops.
+            </p>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>PHP Function</h4>
+            <table class="nova-meta-table">
+                <tr>
+                    <th>Function</th>
+                    <td><code>nova_get_term_image($term_id, $size, $return)</code></td>
+                </tr>
+                <tr>
+                    <th>$term_id</th>
+                    <td>Term ID (optional, auto-detects on archives)</td>
+                </tr>
+                <tr>
+                    <th>$size</th>
+                    <td><code>'full'</code>, <code>'large'</code>, <code>'medium'</code>, etc.</td>
+                </tr>
+                <tr>
+                    <th>$return</th>
+                    <td><code>'url'</code> | <code>'id'</code> | <code>'tag'</code></td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>Bricks Usage Examples</h4>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 0;">
+                <strong>Image URL (full size):</strong><br>
+                <code>{nova_term_image}</code>
+            </p>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
+                <strong>Specific size:</strong><br>
+                <code>{echo:nova_get_term_image(null, 'large')}</code>
+            </p>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
+                <strong>Full img tag:</strong><br>
+                <code>{echo:nova_get_term_image(null, 'medium', 'tag')}</code>
+            </p>
+        </div>
+
+        <div class="nova-meta-item">
+            <h4>Extending to Other Taxonomies</h4>
+            <p class="nova-meta-example" style="border-top: none; padding-top: 0;">
+                Add this to your theme's functions.php:<br>
+                <code style="font-size: 11px;">add_filter('nova_taxonomy_image_taxonomies', function($taxonomies) {<br>
+                &nbsp;&nbsp;$taxonomies[] = 'post_tag';<br>
+                &nbsp;&nbsp;return $taxonomies;<br>
+                });</code>
+            </p>
         </div>
     </div>
     <?php

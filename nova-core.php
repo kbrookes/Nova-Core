@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.49
+ * Version: 0.1.50
  * Author: Nova Strategic
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -51,4 +51,8 @@ $nova_features = get_option('nova_core_features_options', array());
 
 if (!empty($nova_features['enable_video_embeds'])) {
     require_once __DIR__ . '/includes/video-embeds.php';
+}
+
+if (!empty($nova_features['enable_taxonomy_images'])) {
+    require_once __DIR__ . '/includes/taxonomy-images.php';
 }
