@@ -675,12 +675,6 @@ function nova_core_enable_link_to_product_callback() {
  * Render the Video Embeds documentation sidebar
  */
 function nova_core_render_video_embeds_docs() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_video_embeds']) ? $options['enable_video_embeds'] : 0;
-
-    if (!$enabled) {
-        return;
-    }
     ?>
     <div class="nova-meta-reference">
         <h3>Video Embeds Reference</h3>
