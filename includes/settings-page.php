@@ -311,28 +311,58 @@ function nova_core_settings_page() {
                         </div>
 
                         <div class="nova-meta-item nova-meta-function">
-                            <h4>Bricks Dynamic Tag</h4>
+                            <h4>Bricks Dynamic Tags</h4>
                             <table class="nova-meta-table">
                                 <tr>
-                                    <th>Tag</th>
-                                    <td><code>{nova_product_link}</code></td>
+                                    <th><code>{nova_product_link}</code></th>
+                                    <td>Product URL</td>
                                 </tr>
                                 <tr>
-                                    <th>Returns</th>
-                                    <td>Full URL or empty string</td>
+                                    <th><code>{nova_product_image}</code></th>
+                                    <td>Product image URL</td>
                                 </tr>
                                 <tr>
-                                    <th>Picker</th>
-                                    <td>Nova Core &rarr; Product Link</td>
+                                    <th><code>{nova_product_price}</code></th>
+                                    <td>Formatted price (HTML)</td>
+                                </tr>
+                                <tr>
+                                    <th><code>{nova_product_title}</code></th>
+                                    <td>Product title</td>
                                 </tr>
                             </table>
                             <p class="nova-meta-example">
-                                <strong>Button Link:</strong><br>
-                                Select from dynamic data picker or type <code>{nova_product_link}</code>
+                                <strong>In Bricks:</strong> Use <strong>Custom URL</strong> field and enter the tag directly.
                             </p>
-                            <p class="nova-meta-example" style="border-top: none; padding-top: 5px;">
-                                <strong>Condition:</strong><br>
-                                Dynamic data <code>is not empty</code> to show/hide element
+                        </div>
+
+                        <div class="nova-meta-item nova-meta-function">
+                            <h4>PHP Function</h4>
+                            <table class="nova-meta-table">
+                                <tr>
+                                    <th>Function</th>
+                                    <td><code>nova_get_product($return, $post_id, $size)</code></td>
+                                </tr>
+                                <tr>
+                                    <th>$return</th>
+                                    <td><code>'link'</code> | <code>'image'</code> | <code>'price'</code> | <code>'title'</code> | <code>'id'</code></td>
+                                </tr>
+                                <tr>
+                                    <th>$size</th>
+                                    <td>Image size (for <code>'image'</code> return)</td>
+                                </tr>
+                            </table>
+                            <p class="nova-meta-example">
+                                <strong>Examples:</strong><br>
+                                <code>{echo:nova_get_product('image')}</code><br>
+                                <code>{echo:nova_get_product('price')}</code><br>
+                                <code>{echo:nova_get_product('image', null, 'medium')}</code>
+                            </p>
+                        </div>
+
+                        <div class="nova-meta-item">
+                            <h4>Usage Tips</h4>
+                            <p class="nova-meta-example" style="border-top: none; padding-top: 0;">
+                                <strong>Condition:</strong> Use <code>{nova_product_link}</code> with <code>is not empty</code> to show/hide elements when a product is linked.
                             </p>
                         </div>
                     </div>
@@ -788,7 +818,7 @@ function nova_core_render_taxonomy_images_docs() {
         <p class="description">Add featured images to taxonomy terms (Categories by default).</p>
 
         <div class="nova-meta-item">
-            <h4>Bricks Dynamic Tags</h4>
+            <h4>Bricks Usage</h4>
             <table class="nova-meta-table">
                 <tr>
                     <th>Tag</th>
@@ -799,12 +829,12 @@ function nova_core_render_taxonomy_images_docs() {
                     <td>Full image URL</td>
                 </tr>
                 <tr>
-                    <th>Picker</th>
-                    <td>Nova Core &rarr; Term Image URL</td>
+                    <th>How to use</th>
+                    <td>Select <strong>Custom URL</strong> (not Dynamic Data picker)</td>
                 </tr>
             </table>
             <p class="nova-meta-example">
-                Works automatically on category archive templates and within term loops.
+                Works automatically on category archive templates. Enter the tag directly in the Custom URL field.
             </p>
         </div>
 

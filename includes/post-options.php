@@ -34,6 +34,125 @@ function nova_get_product_link($post_id = null) {
 }
 
 /**
+ * Get product data from the linked WooCommerce product
+ *
+ * Use in Bricks Builder:
+ * - {echo:nova_get_product('link')} or {nova_product_link}
+ * - {echo:nova_get_product('image')}
+ * - {echo:nova_get_product('price')}
+ *
+ * @param string $return What to return: 'link', 'image', 'price', 'title', 'id'. Default 'link'.
+ * @param int|null $post_id Optional post ID. Defaults to current post.
+ * @param string $size Image size when $return is 'image'. Default 'full'.
+ * @return string|int The requested product data or empty string if not found.
+ */
+function nova_get_product($return = 'link', $post_id = null, $size = 'full') {
+    if (!$post_id) {
+        $post_id = get_the_ID();
+    }
+
+    // Get the stored product reference (relative URL or product ID)
+    $product_ref = get_post_meta($post_id, 'link_to_product', true);
+
+    if (empty($product_ref)) {
+        return '';
+    }
+
+    // If it's just a link return, use the simple method
+    if ($return === 'link') {
+        return home_url($product_ref);
+    }
+
+    // For other returns, we need to find the actual product
+    $product_id = nova_get_product_id_from_ref($product_ref);
+
+    if (!$product_id) {
+        return '';
+    }
+
+    switch ($return) {
+        case 'id':
+            return $product_id;
+
+        case 'title':
+            return get_the_title($product_id);
+
+        case 'image':
+            $image_id = get_post_thumbnail_id($product_id);
+            if ($image_id) {
+                return wp_get_attachment_image_url($image_id, $size);
+            }
+            return '';
+
+        case 'image_tag':
+            $image_id = get_post_thumbnail_id($product_id);
+            if ($image_id) {
+                return wp_get_attachment_image($image_id, $size, false, array(
+                    'class' => 'nova-product-image',
+                    'alt'   => get_the_title($product_id),
+                ));
+            }
+            return '';
+
+        case 'price':
+            if (function_exists('wc_get_product')) {
+                $product = wc_get_product($product_id);
+                if ($product) {
+                    return $product->get_price_html();
+                }
+            }
+            return '';
+
+        case 'price_raw':
+            if (function_exists('wc_get_product')) {
+                $product = wc_get_product($product_id);
+                if ($product) {
+                    return $product->get_price();
+                }
+            }
+            return '';
+
+        default:
+            return home_url($product_ref);
+    }
+}
+
+/**
+ * Get product ID from a relative URL or product reference
+ *
+ * @param string $ref Relative URL (e.g., '/product/my-product/') or product ID.
+ * @return int|false Product ID or false if not found.
+ */
+function nova_get_product_id_from_ref($ref) {
+    // If it's already a numeric ID
+    if (is_numeric($ref)) {
+        return (int) $ref;
+    }
+
+    // Try to get post ID from URL
+    $ref = trim($ref, '/');
+    $full_url = home_url($ref);
+    $product_id = url_to_postid($full_url);
+
+    if ($product_id) {
+        return $product_id;
+    }
+
+    // Try to find by slug (last segment of URL)
+    $segments = explode('/', $ref);
+    $slug = end($segments);
+
+    if ($slug) {
+        $product = get_page_by_path($slug, OBJECT, 'product');
+        if ($product) {
+            return $product->ID;
+        }
+    }
+
+    return false;
+}
+
+/**
  * Register Nova dynamic data tags with Bricks Builder
  */
 add_filter('bricks/dynamic_tags_list', 'nova_core_register_bricks_tags');
@@ -41,6 +160,24 @@ function nova_core_register_bricks_tags($tags) {
     $tags[] = array(
         'name'  => '{nova_product_link}',
         'label' => 'Product Link',
+        'group' => 'Nova Core',
+    );
+
+    $tags[] = array(
+        'name'  => '{nova_product_image}',
+        'label' => 'Product Image URL',
+        'group' => 'Nova Core',
+    );
+
+    $tags[] = array(
+        'name'  => '{nova_product_price}',
+        'label' => 'Product Price',
+        'group' => 'Nova Core',
+    );
+
+    $tags[] = array(
+        'name'  => '{nova_product_title}',
+        'label' => 'Product Title',
         'group' => 'Nova Core',
     );
 
@@ -52,9 +189,20 @@ function nova_core_register_bricks_tags($tags) {
  */
 add_filter('bricks/dynamic_data/render_tag', 'nova_core_render_bricks_tag', 10, 3);
 function nova_core_render_bricks_tag($tag, $post, $context) {
-    if ($tag === 'nova_product_link') {
-        $post_id = is_object($post) ? $post->ID : $post;
-        return nova_get_product_link($post_id);
+    $post_id = is_object($post) ? $post->ID : $post;
+
+    switch ($tag) {
+        case 'nova_product_link':
+            return nova_get_product('link', $post_id);
+
+        case 'nova_product_image':
+            return nova_get_product('image', $post_id);
+
+        case 'nova_product_price':
+            return nova_get_product('price', $post_id);
+
+        case 'nova_product_title':
+            return nova_get_product('title', $post_id);
     }
 
     return $tag;
@@ -65,14 +213,31 @@ function nova_core_render_bricks_tag($tag, $post, $context) {
  */
 add_filter('bricks/dynamic_data/render_content', 'nova_core_render_bricks_content', 10, 3);
 function nova_core_render_bricks_content($content, $post, $context) {
-    if (strpos($content, '{nova_product_link}') === false) {
+    // Quick check for any nova_product tags
+    if (strpos($content, '{nova_product_') === false) {
         return $content;
     }
 
     $post_id = is_object($post) ? $post->ID : $post;
-    $value = nova_get_product_link($post_id);
 
-    return str_replace('{nova_product_link}', $value, $content);
+    // Replace each tag type
+    if (strpos($content, '{nova_product_link}') !== false) {
+        $content = str_replace('{nova_product_link}', nova_get_product('link', $post_id), $content);
+    }
+
+    if (strpos($content, '{nova_product_image}') !== false) {
+        $content = str_replace('{nova_product_image}', nova_get_product('image', $post_id), $content);
+    }
+
+    if (strpos($content, '{nova_product_price}') !== false) {
+        $content = str_replace('{nova_product_price}', nova_get_product('price', $post_id), $content);
+    }
+
+    if (strpos($content, '{nova_product_title}') !== false) {
+        $content = str_replace('{nova_product_title}', nova_get_product('title', $post_id), $content);
+    }
+
+    return $content;
 }
 
 /**
