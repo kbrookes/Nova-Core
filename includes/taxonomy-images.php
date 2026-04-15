@@ -11,6 +11,15 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Register nova_get_term_image for Bricks {echo:} function calls
+ */
+add_filter('bricks/code/echo_function_names', 'nova_core_register_term_image_echo_functions');
+function nova_core_register_term_image_echo_functions($functions) {
+    $functions[] = 'nova_get_term_image';
+    return $functions;
+}
+
+/**
  * Get the taxonomies that should have image support
  *
  * @return array Array of taxonomy names.

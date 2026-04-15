@@ -11,6 +11,15 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Register nova_get_video for Bricks {echo:} function calls
+ */
+add_filter('bricks/code/echo_function_names', 'nova_core_register_video_echo_functions');
+function nova_core_register_video_echo_functions($functions) {
+    $functions[] = 'nova_get_video';
+    return $functions;
+}
+
+/**
  * Get video URL or thumbnail from YouTube/Vimeo
  *
  * Accepts an ACF field name or direct URL. Returns the standardised URL or thumbnail.

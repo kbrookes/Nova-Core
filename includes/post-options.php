@@ -12,6 +12,16 @@
 defined('ABSPATH') || exit;
 
 /**
+ * Register nova_get_product for Bricks {echo:} function calls
+ */
+add_filter('bricks/code/echo_function_names', 'nova_core_register_product_echo_functions');
+function nova_core_register_product_echo_functions($functions) {
+    $functions[] = 'nova_get_product';
+    $functions[] = 'nova_get_product_link';
+    return $functions;
+}
+
+/**
  * Get the product link URL for the current post
  *
  * Use in Bricks Builder: {nova_product_link}
