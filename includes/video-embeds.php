@@ -15,6 +15,10 @@ defined('ABSPATH') || exit;
  */
 add_filter('bricks/code/echo_function_names', 'nova_core_register_video_echo_functions');
 function nova_core_register_video_echo_functions($functions) {
+    // Ensure $functions is an array (Bricks may pass a string in some contexts)
+    if (!is_array($functions)) {
+        $functions = array();
+    }
     $functions[] = 'nova_get_video';
     return $functions;
 }
