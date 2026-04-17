@@ -14,42 +14,69 @@ function nova_core_add_settings_page() {
 }
 
 // Add admin bar warning for development environment
-add_action('admin_bar_menu', 'nova_core_admin_bar_env_warning', 999);
-function nova_core_admin_bar_env_warning($wp_admin_bar) {
-    $options = get_option('nova_core_tracking_options');
-    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+add_action('admin_bar_menu', 'nova_core_admin_bar_status', 999);
+function nova_core_admin_bar_status($wp_admin_bar) {
+    $options = get_option('nova_core_tracking_options', array());
+    $is_production = isset($options['environment']) && $options['environment'] === 'production';
+    $search_visible = isset($options['search_visibility']) ? (bool) $options['search_visibility'] : false;
+    $ai_visible = isset($options['ai_visibility']) ? (bool) $options['ai_visibility'] : false;
 
-    if ($environment !== 'production') {
+    // Build status indicators
+    $warnings = array();
+    $title_parts = array();
+
+    if (!$is_production) {
+        $warnings[] = 'Development Mode';
+        $title_parts[] = '<span style="background:#dc3232; color:#fff; padding:0 6px; border-radius:3px; font-weight:bold; margin-right:4px;">DEV</span>';
+    }
+
+    if (!$search_visible) {
+        $warnings[] = 'Search Engines Blocked';
+        $title_parts[] = '<span style="background:#dc3232; color:#fff; padding:0 6px; border-radius:3px; font-weight:bold; margin-right:4px;">NOINDEX</span>';
+    }
+
+    if (!$ai_visible && $is_production && $search_visible) {
+        // Only show AI warning if other things are OK - less critical
+        $warnings[] = 'AI Crawlers Blocked';
+        $title_parts[] = '<span style="background:#b59500; color:#fff; padding:0 6px; border-radius:3px; font-weight:bold; margin-right:4px;">NO AI</span>';
+    }
+
+    // Only show if there are warnings
+    if (!empty($title_parts)) {
         $wp_admin_bar->add_node(array(
-            'id'    => 'nova-env-warning',
-            'title' => '<span style="background:#dc3232; color:#fff; padding:0 8px; border-radius:3px; font-weight:bold;">Env: Dev</span>',
+            'id'    => 'nova-site-status',
+            'title' => implode('', $title_parts),
             'href'  => admin_url('options-general.php?page=nova-core-settings&tab=tracking'),
             'meta'  => array(
-                'title' => 'Nova Core is in Development mode - tracking data will also be logged to console'
+                'title' => 'Nova Core Status: ' . implode(', ', $warnings)
             )
         ));
     }
 }
 
-// Add CSS for admin bar warning
+// Add CSS for admin bar status indicators
 add_action('admin_head', 'nova_core_admin_bar_styles');
 add_action('wp_head', 'nova_core_admin_bar_styles');
 function nova_core_admin_bar_styles() {
-    $options = get_option('nova_core_tracking_options');
-    $environment = isset($options['environment']) ? $options['environment'] : 'production';
-
-    if ($environment !== 'production' && is_admin_bar_showing()) {
-        ?>
-        <style>
-            #wpadminbar #wp-admin-bar-nova-env-warning > .ab-item {
-                background: transparent !important;
-            }
-            #wpadminbar #wp-admin-bar-nova-env-warning:hover > .ab-item span {
-                background: #b52727 !important;
-            }
-        </style>
-        <?php
+    if (!is_admin_bar_showing()) {
+        return;
     }
+    ?>
+    <style>
+        #wpadminbar #wp-admin-bar-nova-site-status > .ab-item {
+            background: transparent !important;
+            padding-right: 0 !important;
+        }
+        #wpadminbar #wp-admin-bar-nova-site-status > .ab-item span {
+            font-size: 11px;
+            line-height: 20px;
+            display: inline-block;
+        }
+        #wpadminbar #wp-admin-bar-nova-site-status:hover > .ab-item span {
+            opacity: 0.85;
+        }
+    </style>
+    <?php
 }
 
 // Register settings
@@ -60,10 +87,10 @@ function nova_core_register_settings() {
     register_setting('nova_core_features_settings', 'nova_core_features_options');
     register_setting('nova_core_blog_settings', 'nova_core_blog_options');
 
-    // Tracking Settings
+    // Site Status Settings (formerly Tracking)
     add_settings_section(
         'nova_core_tracking_section',
-        'Tracking Settings',
+        'Site Status',
         'nova_core_tracking_section_callback',
         'nova-core-tracking'
     );
@@ -72,6 +99,22 @@ function nova_core_register_settings() {
         'environment',
         'Environment',
         'nova_core_environment_callback',
+        'nova-core-tracking',
+        'nova_core_tracking_section'
+    );
+
+    add_settings_field(
+        'search_visibility',
+        'Search Engine Visibility',
+        'nova_core_search_visibility_callback',
+        'nova-core-tracking',
+        'nova_core_tracking_section'
+    );
+
+    add_settings_field(
+        'ai_visibility',
+        'AI Crawler Visibility',
+        'nova_core_ai_visibility_callback',
         'nova-core-tracking',
         'nova_core_tracking_section'
     );
@@ -185,9 +228,9 @@ function nova_core_settings_page() {
         <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
         
         <h2 class="nav-tab-wrapper">
-            <a href="?page=nova-core-settings&tab=tracking" 
+            <a href="?page=nova-core-settings&tab=tracking"
                class="nav-tab <?php echo $active_tab == 'tracking' ? 'nav-tab-active' : ''; ?>">
-                Tracking
+                Site Status
             </a>
             <a href="?page=nova-core-settings&tab=features" 
                class="nav-tab <?php echo $active_tab == 'features' ? 'nav-tab-active' : ''; ?>">
@@ -208,9 +251,79 @@ function nova_core_settings_page() {
                 <?php
                 settings_fields('nova_core_tracking_settings');
                 do_settings_sections('nova-core-tracking');
-                submit_button('Save Tracking Settings');
+                submit_button('Save Settings');
                 ?>
             </form>
+
+            <style>
+                /* Toggle switch styles */
+                .nova-toggle {
+                    position: relative;
+                    display: inline-block;
+                    cursor: pointer;
+                }
+                .nova-toggle input[type="checkbox"] {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                    position: absolute;
+                }
+                .nova-toggle-slider {
+                    display: inline-flex;
+                    width: 120px;
+                    height: 34px;
+                    background: #dc3232;
+                    border-radius: 17px;
+                    position: relative;
+                    transition: background 0.3s ease;
+                }
+                .nova-toggle input:checked + .nova-toggle-slider {
+                    background: #00a32a;
+                }
+                .nova-toggle-slider::before {
+                    content: '';
+                    position: absolute;
+                    width: 26px;
+                    height: 26px;
+                    left: 4px;
+                    top: 4px;
+                    background: white;
+                    border-radius: 50%;
+                    transition: transform 0.3s ease;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }
+                .nova-toggle input:checked + .nova-toggle-slider::before {
+                    transform: translateX(86px);
+                }
+                .nova-toggle-on,
+                .nova-toggle-off {
+                    position: absolute;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: white;
+                    text-transform: uppercase;
+                    transition: opacity 0.3s ease;
+                }
+                .nova-toggle-on {
+                    left: 12px;
+                    opacity: 0;
+                }
+                .nova-toggle-off {
+                    right: 12px;
+                    opacity: 1;
+                }
+                .nova-toggle input:checked + .nova-toggle-slider .nova-toggle-on {
+                    opacity: 1;
+                }
+                .nova-toggle input:checked + .nova-toggle-slider .nova-toggle-off {
+                    opacity: 0;
+                }
+                .form-table td .description {
+                    margin-top: 12px;
+                }
+            </style>
         <?php elseif ($active_tab == 'features'): ?>
             <div class="nova-features-settings-wrap">
                 <div class="nova-features-settings-main">
@@ -564,13 +677,28 @@ function nova_core_settings_page() {
 // Section callbacks
 function nova_core_tracking_section_callback() {
     $options = get_option('nova_core_tracking_options');
-    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+    $is_production = isset($options['environment']) && $options['environment'] === 'production';
+    $search_visible = isset($options['search_visibility']) ? $options['search_visibility'] : 0;
+    $ai_visible = isset($options['ai_visibility']) ? $options['ai_visibility'] : 0;
 
-    echo '<p>Configure tracking environment for your site.</p>';
-    echo '<p><strong>Note:</strong> Tracking is always enabled and sends data to all available backends (Plausible via plugin, Google Analytics via Zaraz).</p>';
+    echo '<p>Control your site\'s environment and visibility settings from one place. Nova Core manages your robots.txt automatically based on these settings.</p>';
 
-    if ($environment !== 'production') {
-        echo '<p style="color: #dc3232; font-weight: bold;">⚠️ Development mode is active - events will also be logged to the browser console.</p>';
+    // Status summary
+    $status_items = array();
+    if (!$is_production) {
+        $status_items[] = '<span style="color: #dc3232;">Development Mode</span>';
+    }
+    if (!$search_visible) {
+        $status_items[] = '<span style="color: #dc3232;">Search Engines Blocked</span>';
+    }
+    if (!$ai_visible) {
+        $status_items[] = '<span style="color: #b59500;">AI Crawlers Blocked</span>';
+    }
+
+    if (!empty($status_items)) {
+        echo '<p style="font-weight: bold;">Current Status: ' . implode(' · ', $status_items) . '</p>';
+    } else {
+        echo '<p style="color: #00a32a; font-weight: bold;">✓ Site is live and fully visible</p>';
     }
 }
 
@@ -581,32 +709,70 @@ function nova_core_features_section_callback() {
 // Field callbacks
 function nova_core_environment_callback() {
     $options = get_option('nova_core_tracking_options');
-    $environment = isset($options['environment']) ? $options['environment'] : 'production';
+    $is_production = isset($options['environment']) && $options['environment'] === 'production';
     ?>
-    <div class="nova-core-tracking-settings">
-        <div class="nova-core-setting-row">
-            <select name="nova_core_tracking_options[environment]">
-                <option value="production" <?php selected($environment, 'production'); ?>>Production</option>
-                <option value="development" <?php selected($environment, 'development'); ?>>Development</option>
-            </select>
-            <p class="description">
-                <strong>Production:</strong> Events are sent to tracking backends only.<br>
-                <strong>Development:</strong> Events are sent to tracking backends AND logged to browser console for debugging.
-            </p>
-        </div>
-    </div>
+    <label class="nova-toggle">
+        <input type="hidden" name="nova_core_tracking_options[environment]" value="development">
+        <input type="checkbox"
+               name="nova_core_tracking_options[environment]"
+               value="production"
+               <?php checked($is_production); ?>>
+        <span class="nova-toggle-slider">
+            <span class="nova-toggle-on">Live</span>
+            <span class="nova-toggle-off">Dev</span>
+        </span>
+    </label>
+    <p class="description">
+        <strong>Live (Production):</strong> Site is in production mode. Tracking events sent to backends only.<br>
+        <strong>Dev (Development):</strong> Site is in development mode. Tracking events also logged to browser console. Admin bar shows warning.
+    </p>
+    <?php
+}
 
-    <style>
-        .nova-core-tracking-settings {
-            max-width: 600px;
-        }
-        .nova-core-setting-row {
-            margin-bottom: 20px;
-        }
-        .nova-core-setting-row select {
-            margin-bottom: 10px;
-        }
-    </style>
+function nova_core_search_visibility_callback() {
+    $options = get_option('nova_core_tracking_options');
+    $search_visible = isset($options['search_visibility']) ? $options['search_visibility'] : 0;
+    ?>
+    <label class="nova-toggle">
+        <input type="hidden" name="nova_core_tracking_options[search_visibility]" value="0">
+        <input type="checkbox"
+               name="nova_core_tracking_options[search_visibility]"
+               value="1"
+               <?php checked(1, $search_visible); ?>>
+        <span class="nova-toggle-slider">
+            <span class="nova-toggle-on">Visible</span>
+            <span class="nova-toggle-off">Hidden</span>
+        </span>
+    </label>
+    <p class="description">
+        <strong>Visible:</strong> Search engines (Google, Bing, etc.) can index your site.<br>
+        <strong>Hidden:</strong> Search engines are blocked via robots.txt. Overrides WordPress Settings > Reading.
+    </p>
+    <?php
+}
+
+function nova_core_ai_visibility_callback() {
+    $options = get_option('nova_core_tracking_options');
+    $ai_visible = isset($options['ai_visibility']) ? $options['ai_visibility'] : 0;
+    ?>
+    <label class="nova-toggle">
+        <input type="hidden" name="nova_core_tracking_options[ai_visibility]" value="0">
+        <input type="checkbox"
+               name="nova_core_tracking_options[ai_visibility]"
+               value="1"
+               <?php checked(1, $ai_visible); ?>>
+        <span class="nova-toggle-slider">
+            <span class="nova-toggle-on">Visible</span>
+            <span class="nova-toggle-off">Hidden</span>
+        </span>
+    </label>
+    <p class="description">
+        <strong>Visible:</strong> AI crawlers (GPTBot, Claude, Perplexity, etc.) can access your content for AI search results.<br>
+        <strong>Hidden:</strong> AI crawlers are blocked via robots.txt.
+    </p>
+    <p class="description" style="margin-top: 10px; padding: 10px; background: #f0f6fc; border-left: 4px solid #2271b1;">
+        <strong>Tip:</strong> Enabling AI visibility can improve your presence in AI-powered search engines and chatbots (ChatGPT, Claude, Perplexity, Google AI Overviews).
+    </p>
     <?php
 }
 
