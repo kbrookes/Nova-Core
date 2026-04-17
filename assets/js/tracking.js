@@ -96,7 +96,8 @@ document.addEventListener('DOMContentLoaded', function () {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const sec = entry.target;
-          
+          const page = getWPPageName();
+
           // Check if this is a data-track-inside section
           if (sec.hasAttribute('data-track-inside')) {
             // Find all elements with data-name inside this section
@@ -105,7 +106,10 @@ document.addEventListener('DOMContentLoaded', function () {
               const section = namedEl.getAttribute('data-name');
               if (!trackedSections.includes(section)) {
                 trackedSections.push(section);
-                const props = { section, page: getWPPageName() };
+                const props = { section, page };
+                // Send descriptive event name to Plausible for better Goals visibility
+                const eventName = `Viewed: ${section}`;
+                if (typeof plausible === 'function') plausible(eventName, { props });
                 trackEvent('Viewed Section', props);
               }
             });
@@ -118,7 +122,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!trackedSections.includes(section)) {
               trackedSections.push(section);
-              const props = { section, page: getWPPageName() };
+              const props = { section, page };
+              // Send descriptive event name to Plausible for better Goals visibility
+              const eventName = `Viewed: ${section}`;
+              if (typeof plausible === 'function') plausible(eventName, { props });
               trackEvent('Viewed Section', props);
             }
           }
