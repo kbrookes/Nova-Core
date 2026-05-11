@@ -1,6 +1,150 @@
 <?php
 // Nova Core Settings Page
 
+/**
+ * Build Stage Helper Functions
+ */
+
+/**
+ * Get all available build stages with labels
+ *
+ * @return array Associative array of stage => label pairs
+ */
+function nova_core_get_build_stages() {
+    return array(
+        'content'         => 'Content',
+        'wireframe'       => 'Wireframe',
+        'wireframe_review' => 'Wireframe Review',
+        'design'          => 'Design',
+        'design_review'   => 'Design Review',
+        'approved'        => 'Approved',
+        'maintenance'     => 'Maintenance',
+    );
+}
+
+/**
+ * Get the current build stage
+ *
+ * @return string The current build stage key, defaults to 'content'
+ */
+function nova_core_get_build_stage() {
+    $options = get_option('nova_core_tracking_options', array());
+    $stage = isset($options['build_stage']) ? $options['build_stage'] : 'content';
+    $valid_stages = array_keys(nova_core_get_build_stages());
+    return in_array($stage, $valid_stages, true) ? $stage : 'content';
+}
+
+/**
+ * Get the human-readable label for a build stage
+ *
+ * @param string|null $stage The stage key (uses current stage if null)
+ * @return string The human-readable label
+ */
+function nova_core_get_build_stage_label($stage = null) {
+    if ($stage === null) {
+        $stage = nova_core_get_build_stage();
+    }
+    $stages = nova_core_get_build_stages();
+    return isset($stages[$stage]) ? $stages[$stage] : 'Content';
+}
+
+/**
+ * Get the compact admin bar badge label for a build stage
+ *
+ * @param string|null $stage The stage key (uses current stage if null)
+ * @return string The compact badge label
+ */
+function nova_core_get_build_stage_badge_label($stage = null) {
+    if ($stage === null) {
+        $stage = nova_core_get_build_stage();
+    }
+    $badge_labels = array(
+        'content'         => 'CONTENT',
+        'wireframe'       => 'WIREFRAME',
+        'wireframe_review' => 'WF REVIEW',
+        'design'          => 'DESIGN',
+        'design_review'   => 'DESIGN REVIEW',
+        'approved'        => 'APPROVED',
+        'maintenance'     => 'MAINT',
+    );
+    return isset($badge_labels[$stage]) ? $badge_labels[$stage] : 'CONTENT';
+}
+
+/**
+ * Get the colour for a build stage badge
+ *
+ * @param string|null $stage The stage key (uses current stage if null)
+ * @return string The hex colour code
+ */
+function nova_core_get_build_stage_colour($stage = null) {
+    if ($stage === null) {
+        $stage = nova_core_get_build_stage();
+    }
+    $colours = array(
+        'content'         => '#50575e',
+        'wireframe'       => '#2271b1',
+        'wireframe_review' => '#72aee6',
+        'design'          => '#7e3af2',
+        'design_review'   => '#a78bfa',
+        'approved'        => '#00a32a',
+        'maintenance'     => '#b59500',
+    );
+    return isset($colours[$stage]) ? $colours[$stage] : '#50575e';
+}
+
+/**
+ * Register REST API endpoint for site context
+ */
+add_action('rest_api_init', 'nova_core_register_rest_routes');
+function nova_core_register_rest_routes() {
+    register_rest_route('nova-core/v1', '/site-context', array(
+        'methods'             => 'GET',
+        'callback'            => 'nova_core_rest_site_context',
+        'permission_callback' => function() {
+            return current_user_can('manage_options');
+        },
+    ));
+}
+
+/**
+ * REST endpoint callback for site context
+ *
+ * @return WP_REST_Response
+ */
+function nova_core_rest_site_context() {
+    $options = get_option('nova_core_tracking_options', array());
+    $is_production = isset($options['environment']) && $options['environment'] === 'production';
+    $search_visible = isset($options['search_visibility']) ? (bool) $options['search_visibility'] : false;
+    $ai_visible = isset($options['ai_visibility']) ? (bool) $options['ai_visibility'] : false;
+    $build_stage = nova_core_get_build_stage();
+
+    $response = array(
+        'environment'        => $is_production ? 'production' : 'development',
+        'build_stage'        => $build_stage,
+        'build_stage_label'  => nova_core_get_build_stage_label($build_stage),
+        'search_visibility'  => $search_visible,
+        'ai_visibility'      => $ai_visible,
+        'tracking_mode'      => $is_production ? 'live' : 'debug',
+        'wireframe_palette'  => array(
+            'background'   => 'var(--base)',
+            'section_alt'  => 'var(--base-ultra-light)',
+            'card'         => 'var(--base-light)',
+            'border'       => 'var(--base-medium)',
+            'text'         => 'var(--base-dark)',
+            'heading'      => 'var(--base-ultra-dark)',
+        ),
+        'brand_palette'      => array(
+            'primary'   => 'var(--primary)',
+            'secondary' => 'var(--secondary)',
+            'accent'    => 'var(--accent)',
+            'black'     => 'var(--black)',
+            'white'     => 'var(--white)',
+        ),
+    );
+
+    return rest_ensure_response($response);
+}
+
 // Add menu item
 add_action('admin_menu', 'nova_core_add_settings_page');
 function nova_core_add_settings_page() {
@@ -20,6 +164,10 @@ function nova_core_admin_bar_status($wp_admin_bar) {
     $is_production = isset($options['environment']) && $options['environment'] === 'production';
     $search_visible = isset($options['search_visibility']) ? (bool) $options['search_visibility'] : false;
     $ai_visible = isset($options['ai_visibility']) ? (bool) $options['ai_visibility'] : false;
+    $build_stage = nova_core_get_build_stage();
+    $build_stage_badge = nova_core_get_build_stage_badge_label($build_stage);
+    $build_stage_label = nova_core_get_build_stage_label($build_stage);
+    $build_stage_colour = nova_core_get_build_stage_colour($build_stage);
 
     // Build status indicators
     $warnings = array();
@@ -41,17 +189,19 @@ function nova_core_admin_bar_status($wp_admin_bar) {
         $title_parts[] = '<span style="background:#b59500; color:#fff; padding:0 6px; border-radius:3px; font-weight:bold; margin-right:4px;">NO AI</span>';
     }
 
-    // Only show if there are warnings
-    if (!empty($title_parts)) {
-        $wp_admin_bar->add_node(array(
-            'id'    => 'nova-site-status',
-            'title' => implode('', $title_parts),
-            'href'  => admin_url('options-general.php?page=nova-core-settings&tab=tracking'),
-            'meta'  => array(
-                'title' => 'Nova Core Status: ' . implode(', ', $warnings)
-            )
-        ));
-    }
+    // Always show build stage badge
+    $warnings[] = 'Build Stage: ' . $build_stage_label;
+    $title_parts[] = '<span style="background:' . esc_attr($build_stage_colour) . '; color:#fff; padding:0 6px; border-radius:3px; font-weight:bold; margin-right:4px;">' . esc_html($build_stage_badge) . '</span>';
+
+    // Always show the admin bar node with build stage (at minimum)
+    $wp_admin_bar->add_node(array(
+        'id'    => 'nova-site-status',
+        'title' => implode('', $title_parts),
+        'href'  => admin_url('options-general.php?page=nova-core-settings&tab=tracking'),
+        'meta'  => array(
+            'title' => 'Nova Core Status: ' . implode(', ', $warnings)
+        )
+    ));
 }
 
 // Add CSS for admin bar status indicators
@@ -83,7 +233,9 @@ function nova_core_admin_bar_styles() {
 add_action('admin_init', 'nova_core_register_settings');
 function nova_core_register_settings() {
     // Register option groups
-    register_setting('nova_core_tracking_settings', 'nova_core_tracking_options');
+    register_setting('nova_core_tracking_settings', 'nova_core_tracking_options', array(
+        'sanitize_callback' => 'nova_core_sanitize_tracking_options',
+    ));
     register_setting('nova_core_features_settings', 'nova_core_features_options');
     register_setting('nova_core_blog_settings', 'nova_core_blog_options');
 
@@ -99,6 +251,14 @@ function nova_core_register_settings() {
         'environment',
         'Environment',
         'nova_core_environment_callback',
+        'nova-core-tracking',
+        'nova_core_tracking_section'
+    );
+
+    add_settings_field(
+        'build_stage',
+        'Build Stage',
+        'nova_core_build_stage_callback',
         'nova-core-tracking',
         'nova_core_tracking_section'
     );
@@ -674,12 +834,67 @@ function nova_core_settings_page() {
     <?php
 }
 
+/**
+ * Sanitize tracking options
+ *
+ * @param array $input The input values
+ * @return array Sanitized values
+ */
+function nova_core_sanitize_tracking_options($input) {
+    $sanitized = array();
+
+    // Preserve existing values for keys that aren't being submitted
+    $existing = get_option('nova_core_tracking_options', array());
+
+    // Environment: only 'development' or 'production'
+    if (isset($input['environment'])) {
+        $sanitized['environment'] = ($input['environment'] === 'production') ? 'production' : 'development';
+    } elseif (isset($existing['environment'])) {
+        $sanitized['environment'] = $existing['environment'];
+    } else {
+        $sanitized['environment'] = 'development';
+    }
+
+    // Search visibility: 1 or 0
+    if (isset($input['search_visibility'])) {
+        $sanitized['search_visibility'] = $input['search_visibility'] ? 1 : 0;
+    } elseif (isset($existing['search_visibility'])) {
+        $sanitized['search_visibility'] = $existing['search_visibility'];
+    } else {
+        $sanitized['search_visibility'] = 0;
+    }
+
+    // AI visibility: 1 or 0
+    if (isset($input['ai_visibility'])) {
+        $sanitized['ai_visibility'] = $input['ai_visibility'] ? 1 : 0;
+    } elseif (isset($existing['ai_visibility'])) {
+        $sanitized['ai_visibility'] = $existing['ai_visibility'];
+    } else {
+        $sanitized['ai_visibility'] = 0;
+    }
+
+    // Build stage: must be one of the allowed values
+    $valid_stages = array_keys(nova_core_get_build_stages());
+    if (isset($input['build_stage']) && in_array($input['build_stage'], $valid_stages, true)) {
+        $sanitized['build_stage'] = $input['build_stage'];
+    } elseif (isset($existing['build_stage']) && in_array($existing['build_stage'], $valid_stages, true)) {
+        $sanitized['build_stage'] = $existing['build_stage'];
+    } else {
+        $sanitized['build_stage'] = 'content';
+    }
+
+    return $sanitized;
+}
+
 // Section callbacks
 function nova_core_tracking_section_callback() {
     $options = get_option('nova_core_tracking_options');
     $is_production = isset($options['environment']) && $options['environment'] === 'production';
     $search_visible = isset($options['search_visibility']) ? $options['search_visibility'] : 0;
     $ai_visible = isset($options['ai_visibility']) ? $options['ai_visibility'] : 0;
+    $build_stage = nova_core_get_build_stage();
+    $build_stage_label = nova_core_get_build_stage_label($build_stage);
+    $build_stage_colour = nova_core_get_build_stage_colour($build_stage);
 
     echo '<p>Control your site\'s environment and visibility settings from one place. Nova Core manages your robots.txt automatically based on these settings.</p>';
 
@@ -695,10 +910,14 @@ function nova_core_tracking_section_callback() {
         $status_items[] = '<span style="color: #b59500;">AI Crawlers Blocked</span>';
     }
 
-    if (!empty($status_items)) {
-        echo '<p style="font-weight: bold;">Current Status: ' . implode(' · ', $status_items) . '</p>';
+    // Always show build stage
+    $status_items[] = '<span style="color: ' . esc_attr($build_stage_colour) . ';">Build Stage: ' . esc_html($build_stage_label) . '</span>';
+
+    if (count($status_items) === 1) {
+        // Only build stage shown - no warnings
+        echo '<p style="color: #00a32a; font-weight: bold;">✓ Site is live and fully visible · ' . $status_items[0] . '</p>';
     } else {
-        echo '<p style="color: #00a32a; font-weight: bold;">✓ Site is live and fully visible</p>';
+        echo '<p style="font-weight: bold;">Current Status: ' . implode(' · ', $status_items) . '</p>';
     }
 }
 
@@ -725,6 +944,23 @@ function nova_core_environment_callback() {
     <p class="description">
         <strong>Live (Production):</strong> Site is in production mode. Tracking events sent to backends only.<br>
         <strong>Dev (Development):</strong> Site is in development mode. Tracking events also logged to browser console. Admin bar shows warning.
+    </p>
+    <?php
+}
+
+function nova_core_build_stage_callback() {
+    $current_stage = nova_core_get_build_stage();
+    $stages = nova_core_get_build_stages();
+    ?>
+    <select name="nova_core_tracking_options[build_stage]" id="nova_core_build_stage">
+        <?php foreach ($stages as $value => $label) : ?>
+            <option value="<?php echo esc_attr($value); ?>" <?php selected($current_stage, $value); ?>>
+                <?php echo esc_html($label); ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+    <p class="description">
+        Use this to tell Nova Core, AI tools and collaborators what stage the site is in. This does not control indexing or tracking. Environment still controls development/production behaviour.
     </p>
     <?php
 }

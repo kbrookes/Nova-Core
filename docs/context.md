@@ -1,9 +1,41 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.49** - March 2026
+**Version 0.1.58** - May 2026
 
 ## Recent Version History
+
+### Version 0.1.58 - May 2026
+- Feature/Change: Add Build Stage workflow feature
+- Status: ✅ Complete
+- Notes:
+  - Add build_stage option to Site Status settings (content, wireframe, wireframe_review, design, design_review, approved, maintenance)
+  - Add helper functions for stages, labels, and badge colours
+  - Add sanitisation callback for nova_core_tracking_options
+  - Update section summary to show current build stage
+  - Add colour-coded build stage badge to admin bar
+  - Expose buildStage to frontend JS via novaCoreConfig
+  - Add REST endpoint `/wp-json/nova-core/v1/site-context`
+  - Add documentation for AI workflow rules
+
+### Version 0.1.57 - May 2026
+- Feature/Change: Fix fatal error in Bricks echo function registration
+- Status: ✅ Complete
+- Notes:
+  - Add type checking to ensure $functions is an array before appending
+
+### Version 0.1.56 - May 2026
+- Feature/Change: Fix Plausible section tracking to show descriptive event names
+- Status: ✅ Complete
+- Notes:
+  - Events now show as "Viewed: Hero" instead of "Viewed Section"
+
+### Version 0.1.55 - May 2026
+- Feature/Change: Add unified Site Status panel with robots.txt management
+- Status: ✅ Complete
+- Notes:
+  - Environment, Search Visibility, AI Visibility toggles
+  - Plugin-managed robots.txt with AI crawler rules
 
 ### Version 0.1.49 - March 2026
 - Feature/Change: Fix video embeds documentation sidebar visibility
@@ -282,6 +314,110 @@ Nova-Core/
 | ACF Fields (PHP) | ✅ Complete | Case Studies, Site Settings registered via PHP |
 | RankMath Metabox Control | ✅ Complete | Move to bottom option |
 | Zaraz Cookie Management | ✅ Complete | Logged-in user exclusion |
+| Site Status Panel | ✅ Complete | Environment, Search/AI visibility, robots.txt management |
+| Build Stage | ✅ Complete | Workflow state tracking for AI and human collaboration |
+
+---
+
+## Nova Build Stage
+
+The Build Stage feature helps Nova Core, AI tools and collaborators understand what stage a site is in during development.
+
+### Key Concepts
+
+- **Environment** controls site behaviour: development or production
+- **Build Stage** controls AI/human editing workflow state
+
+These are independent settings. A site can be in `development` environment while in `design` build stage.
+
+### Allowed Stages
+
+| Stage | Label | Description |
+|-------|-------|-------------|
+| `content` | Content | Initial content entry phase |
+| `wireframe` | Wireframe | Structural layout with greyscale colours |
+| `wireframe_review` | Wireframe Review | Client review of wireframe |
+| `design` | Design | Applying brand colours and final styling |
+| `design_review` | Design Review | Client review of design |
+| `approved` | Approved | Design approved, content-only edits |
+| `maintenance` | Maintenance | Site is live and in maintenance mode |
+
+### AI Workflow Rules
+
+#### Wireframe Stage
+- Use native Bricks elements only
+- Use greyscale `--base` variables only (no brand colours)
+- Add `data-name` to every top-level section
+- Add `data-click` to every meaningful clickable element
+- Do not use final brand colours
+
+#### Design Stage
+- Preserve approved wireframe structure
+- Apply brand variables (`--primary`, `--secondary`, `--accent`)
+- Keep tracking attributes intact
+- Prefer Bricks theme styles and global classes over local styles
+
+#### Approved/Maintenance Stage
+- Content-only edits unless explicitly authorised
+- Do not modify structure or styling
+
+### REST Endpoint
+
+```
+GET /wp-json/nova-core/v1/site-context
+```
+
+Returns:
+```json
+{
+  "environment": "development",
+  "build_stage": "wireframe",
+  "build_stage_label": "Wireframe",
+  "search_visibility": false,
+  "ai_visibility": false,
+  "tracking_mode": "debug",
+  "wireframe_palette": {
+    "background": "var(--base)",
+    "section_alt": "var(--base-ultra-light)",
+    "card": "var(--base-light)",
+    "border": "var(--base-medium)",
+    "text": "var(--base-dark)",
+    "heading": "var(--base-ultra-dark)"
+  },
+  "brand_palette": {
+    "primary": "var(--primary)",
+    "secondary": "var(--secondary)",
+    "accent": "var(--accent)",
+    "black": "var(--black)",
+    "white": "var(--white)"
+  }
+}
+```
+
+**Permissions:** Requires `manage_options` capability (administrators only).
+
+### Helper Functions
+
+```php
+// Get all stages with labels
+nova_core_get_build_stages();
+
+// Get current stage key (e.g., 'wireframe')
+nova_core_get_build_stage();
+
+// Get human-readable label (e.g., 'Wireframe')
+nova_core_get_build_stage_label($stage = null);
+
+// Get compact badge label (e.g., 'WF REVIEW')
+nova_core_get_build_stage_badge_label($stage = null);
+
+// Get badge colour
+nova_core_get_build_stage_colour($stage = null);
+```
+
+### JavaScript Access
+
+The build stage is available in the frontend via `novaCoreConfig.buildStage`.
 
 ---
 

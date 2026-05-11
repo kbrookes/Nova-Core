@@ -47,7 +47,8 @@ function nova_enqueue_tracking_script() {
     // Pass essential settings to JS
     $js_config = array(
         'pageTitle' => nova_get_page_title(),
-        'environment' => $environment
+        'environment' => $environment,
+        'buildStage' => function_exists('nova_core_get_build_stage') ? nova_core_get_build_stage() : 'content',
     );
 
     // Pass settings to JS using wp_localize_script
