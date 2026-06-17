@@ -229,6 +229,78 @@ function nova_core_admin_bar_styles() {
     <?php
 }
 
+// Emit the shared Nova Core toggle CSS on every tab of the settings screen.
+// Previously the toggle styles only existed inside the Site Status tab's
+// inline <style> block, so toggles on other tabs (e.g. Schema) rendered as
+// raw checkboxes. Scoped to the settings page only via get_current_screen().
+add_action('admin_head', 'nova_core_settings_toggle_styles');
+function nova_core_settings_toggle_styles() {
+    if (!function_exists('get_current_screen')) {
+        return;
+    }
+    $screen = get_current_screen();
+    if (!$screen || strpos((string) $screen->id, 'nova-core-settings') === false) {
+        return;
+    }
+    ?>
+    <style>
+        .nova-toggle {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .nova-toggle input[type="checkbox"] {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .nova-toggle-slider {
+            display: inline-flex;
+            width: 120px;
+            height: 34px;
+            background: #dc3232;
+            border-radius: 17px;
+            position: relative;
+            transition: background 0.3s ease;
+        }
+        .nova-toggle input:checked + .nova-toggle-slider {
+            background: #00a32a;
+        }
+        .nova-toggle-slider::before {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            left: 4px;
+            top: 4px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .nova-toggle input:checked + .nova-toggle-slider::before {
+            transform: translateX(86px);
+        }
+        .nova-toggle-on,
+        .nova-toggle-off {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            text-transform: uppercase;
+            transition: opacity 0.3s ease;
+        }
+        .nova-toggle-on { left: 12px; opacity: 0; }
+        .nova-toggle-off { right: 12px; opacity: 1; }
+        .nova-toggle input:checked + .nova-toggle-slider .nova-toggle-on { opacity: 1; }
+        .nova-toggle input:checked + .nova-toggle-slider .nova-toggle-off { opacity: 0; }
+    </style>
+    <?php
+}
+
 // Register settings
 add_action('admin_init', 'nova_core_register_settings');
 function nova_core_register_settings() {
@@ -288,30 +360,6 @@ function nova_core_register_settings() {
     );
 
     add_settings_field(
-        'enable_page_types',
-        'Page Types',
-        'nova_core_enable_page_types_callback',
-        'nova-core-features',
-        'nova_core_features_section'
-    );
-
-    add_settings_field(
-        'enable_services',
-        'Services',
-        'nova_core_enable_services_callback',
-        'nova-core-features',
-        'nova_core_features_section'
-    );
-
-    add_settings_field(
-        'enable_resources',
-        'Resources',
-        'nova_core_enable_resources_callback',
-        'nova-core-features',
-        'nova_core_features_section'
-    );
-
-    add_settings_field(
         'enable_case_studies',
         'Case Studies',
         'nova_core_enable_case_studies_callback',
@@ -328,9 +376,9 @@ function nova_core_register_settings() {
     );
 
     add_settings_field(
-        'move_rankmath_metabox',
-        'Move RankMath Metabox to Bottom',
-        'nova_core_move_rankmath_metabox_callback',
+        'enable_resources',
+        'Resources',
+        'nova_core_enable_resources_callback',
         'nova-core-features',
         'nova_core_features_section'
     );
@@ -347,6 +395,14 @@ function nova_core_register_settings() {
         'enable_taxonomy_images',
         'Taxonomy Images',
         'nova_core_enable_taxonomy_images_callback',
+        'nova-core-features',
+        'nova_core_features_section'
+    );
+
+    add_settings_field(
+        'move_rankmath_metabox',
+        'Move RankMath Metabox to Bottom',
+        'nova_core_move_rankmath_metabox_callback',
         'nova-core-features',
         'nova_core_features_section'
     );
@@ -400,9 +456,13 @@ function nova_core_settings_page() {
                class="nav-tab <?php echo $active_tab == 'instructions' ? 'nav-tab-active' : ''; ?>">
                 Instructions
             </a>
-            <a href="?page=nova-core-settings&tab=blog" 
+            <a href="?page=nova-core-settings&tab=blog"
                class="nav-tab <?php echo $active_tab == 'blog' ? 'nav-tab-active' : ''; ?>">
                 Blog Settings
+            </a>
+            <a href="?page=nova-core-settings&tab=schema"
+               class="nav-tab <?php echo $active_tab == 'schema' ? 'nav-tab-active' : ''; ?>">
+                Schema
             </a>
         </h2>
 
@@ -731,6 +791,14 @@ function nova_core_settings_page() {
                     }
                 }
             </style>
+        <?php elseif ($active_tab == 'schema'): ?>
+            <?php
+            if (function_exists('nova_core_schema_settings_render')) {
+                nova_core_schema_settings_render();
+            } else {
+                echo '<p>Nova Schema module is unavailable.</p>';
+            }
+            ?>
         <?php else: ?>
             <div class="nova-core-instructions">
                 <h2>Tracking Setup</h2>
@@ -1012,91 +1080,62 @@ function nova_core_ai_visibility_callback() {
     <?php
 }
 
-function nova_core_enable_page_types_callback() {
+/**
+ * Shared renderer for a Features-tab nova-toggle. Mirrors the markup used by
+ * the Site Status tab so all toggles look identical across tabs.
+ */
+function nova_core_render_features_toggle($key, $description, $default = 0) {
     $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_page_types']) ? $options['enable_page_types'] : 0;
+    $value   = isset($options[$key]) ? (int) $options[$key] : (int) $default;
+    $name    = 'nova_core_features_options[' . $key . ']';
     ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[enable_page_types]" value="1" <?php checked($enabled, 1); ?>>
-        Enable Page Types custom post type
+    <label class="nova-toggle">
+        <input type="hidden" name="<?php echo esc_attr($name); ?>" value="0">
+        <input type="checkbox"
+               name="<?php echo esc_attr($name); ?>"
+               value="1"
+               <?php checked(1, $value); ?>>
+        <span class="nova-toggle-slider">
+            <span class="nova-toggle-on">On</span>
+            <span class="nova-toggle-off">Off</span>
+        </span>
     </label>
-    <?php
-}
-
-function nova_core_enable_services_callback() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_services']) ? $options['enable_services'] : 0;
-    ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[enable_services]" value="1" <?php checked($enabled, 1); ?>>
-        Enable Services custom post type
-    </label>
-    <?php
+    <?php if ($description) : ?>
+        <p class="description"><?php echo wp_kses_post($description); ?></p>
+    <?php endif;
 }
 
 function nova_core_enable_resources_callback() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_resources']) ? $options['enable_resources'] : 0;
-    ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[enable_resources]" value="1" <?php checked($enabled, 1); ?>>
-        Enable Resources custom post type
-    </label>
-    <?php
+    nova_core_render_features_toggle('enable_resources', 'Enable the Resources custom post type.');
 }
 
 function nova_core_enable_case_studies_callback() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_case_studies']) ? $options['enable_case_studies'] : false;
-    ?>
-    <input type="checkbox" name="nova_core_features_options[enable_case_studies]" value="1" <?php checked(1, $enabled); ?> />
-    <p class="description">Enable the Case Studies custom post type.</p>
-    <?php
+    nova_core_render_features_toggle('enable_case_studies', 'Enable the Case Studies custom post type.');
 }
 
 function nova_core_enable_testimonials_callback() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_testimonials']) ? $options['enable_testimonials'] : false;
-    ?>
-    <input type="checkbox" name="nova_core_features_options[enable_testimonials]" value="1" <?php checked(1, $enabled); ?> />
-    <p class="description">Enable the Testimonials custom post type.</p>
-    <?php
+    nova_core_render_features_toggle('enable_testimonials', 'Enable the Testimonials custom post type.');
 }
 
 function nova_core_move_rankmath_metabox_callback() {
-    $options = get_option('nova_core_features_options');
-    $move_metabox = isset($options['move_rankmath_metabox']) ? $options['move_rankmath_metabox'] : 0;
-    ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[move_rankmath_metabox]" value="1" <?php checked(1, $move_metabox); ?>>
-        Move RankMath metabox to the bottom of the content area for custom post types
-    </label>
-    <p class="description">When enabled, the RankMath SEO metabox will appear below the content editor for all custom post types (excluding posts and pages).</p>
-    <?php
+    nova_core_render_features_toggle(
+        'move_rankmath_metabox',
+        'When enabled, the RankMath SEO metabox will appear below the content editor for all custom post types (excluding posts and pages).'
+    );
 }
 
 function nova_core_enable_video_embeds_callback() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_video_embeds']) ? $options['enable_video_embeds'] : 0;
-    ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[enable_video_embeds]" value="1" <?php checked(1, $enabled); ?>>
-        Enable video embed helpers for YouTube and Vimeo
-    </label>
-    <p class="description">Provides <code>nova_get_video()</code> function and Bricks dynamic tags for video URLs and thumbnails.</p>
-    <?php
+    nova_core_render_features_toggle(
+        'enable_video_embeds',
+        'Provides <code>nova_get_video()</code> function and Bricks dynamic tags for video URLs and thumbnails.'
+    );
 }
 
 function nova_core_enable_taxonomy_images_callback() {
-    $options = get_option('nova_core_features_options');
-    $enabled = isset($options['enable_taxonomy_images']) ? $options['enable_taxonomy_images'] : 0;
-    ?>
-    <label>
-        <input type="checkbox" name="nova_core_features_options[enable_taxonomy_images]" value="1" <?php checked(1, $enabled); ?>>
-        Enable featured images for taxonomy terms
-    </label>
-    <p class="description">Adds image upload to Categories. Use <code>{nova_term_image}</code> in Bricks or <code>nova_get_term_image()</code> function.</p>
-    <?php
+    nova_core_render_features_toggle(
+        'enable_taxonomy_images',
+        'Adds image upload to Categories. Use <code>{nova_term_image}</code> in Bricks or <code>nova_get_term_image()</code> function.'
+    );
 }
 
 // Blog settings callbacks

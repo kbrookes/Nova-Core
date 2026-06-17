@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Nova Core
  * Description: Shared logic and components for all Nova Strategic sites.
- * Version: 0.1.58
+ * Version: 0.1.60
  * Author: Nova Strategic
  * Requires at least: 5.8
  * Requires PHP: 7.4
@@ -46,6 +46,11 @@ require_once __DIR__ . '/includes/site-settings.php';
 require_once __DIR__ . '/includes/rankmath-metabox.php';
 require_once __DIR__ . '/includes/post-options.php';
 require_once __DIR__ . '/includes/robots-txt.php';
+
+// Nova Schema: replaces SEOPress structured data with a custom @graph build.
+require_once __DIR__ . '/includes/schema.php';
+require_once __DIR__ . '/includes/schema-output.php';
+require_once __DIR__ . '/includes/schema-metabox.php';
 
 // Conditional includes based on feature settings
 $nova_features = get_option('nova_core_features_options', array());
