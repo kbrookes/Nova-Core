@@ -403,6 +403,67 @@ function nova_schema_extract_bricks_faqs($post_id) {
 }
 
 /**
+ * Diagnostic report for the Bricks accordion FAQ extraction.
+ *
+ * Returns a human-readable string describing every step of the extraction
+ * so that failures can be identified from the metabox without database access.
+ *
+ * @param int $post_id Post ID.
+ * @return string
+ */
+function nova_schema_debug_bricks_extraction($post_id) {
+    $raw = get_post_meta($post_id, '_bricks_data', true);
+    if (!$raw) {
+        return 'No _bricks_data found for this post. The page may use a Bricks content template — try building the FAQ section directly on the page, or see note below.';
+    }
+
+    $elements = is_string($raw) ? json_decode($raw, true) : $raw;
+    if (!is_array($elements)) {
+        return '_bricks_data exists but is not an array (type: ' . gettype($raw) . '). Cannot extract.';
+    }
+
+    $names     = array();
+    $accordions = array();
+    foreach ($elements as $el) {
+        if (!isset($el['name'])) {
+            continue;
+        }
+        $names[] = $el['name'];
+        if ($el['name'] === 'accordion') {
+            $classes = isset($el['settings']['_cssClasses']) ? (string) $el['settings']['_cssClasses'] : '(none)';
+            $item_count = isset($el['settings']['items']) && is_array($el['settings']['items'])
+                ? count($el['settings']['items']) : 0;
+            $first_item_keys = '';
+            if ($item_count > 0) {
+                $first_item_keys = implode(', ', array_keys((array) $el['settings']['items'][0]));
+            }
+            $accordions[] = sprintf(
+                'id=%s | _cssClasses="%s" | items=%d | first item keys: [%s]',
+                isset($el['id']) ? $el['id'] : '?',
+                $classes,
+                $item_count,
+                $first_item_keys
+            );
+        }
+    }
+
+    $lines = array();
+    $lines[] = count($elements) . ' elements in _bricks_data.';
+    $lines[] = 'Element types present: ' . (empty($names) ? '(none)' : implode(', ', array_unique($names)));
+
+    if (empty($accordions)) {
+        $lines[] = 'No accordion elements found.';
+    } else {
+        $lines[] = count($accordions) . ' accordion(s) found:';
+        foreach ($accordions as $a) {
+            $lines[] = '  ' . $a;
+        }
+    }
+
+    return implode("\n", $lines);
+}
+
+/**
  * Read per-post Nova Schema overrides as a normalised array.
  *
  * Shape: [

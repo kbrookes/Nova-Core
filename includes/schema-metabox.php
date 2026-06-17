@@ -176,6 +176,16 @@ function nova_schema_render_metabox($post) {
                 </span>
             </label>
 
+            <?php if ($faq_auto && function_exists('nova_schema_debug_bricks_extraction')) : ?>
+                <div style="background:#f6f7f7;border:1px solid #dcdcde;border-radius:3px;padding:8px;margin-bottom:10px;font-size:11px;line-height:1.6;">
+                    <strong>Extraction status:</strong><br>
+                    <?php
+                    $diag = nova_schema_debug_bricks_extraction($post->ID);
+                    echo nl2br(esc_html($diag));
+                    ?>
+                </div>
+            <?php endif; ?>
+
             <div id="nova-schema-manual-faqs" <?php echo $faq_auto ? 'style="display:none;"' : ''; ?>>
                 <span class="description" style="display:block;margin-bottom:8px;">
                     Manual Q+A pairs — leave both blank to discard a row.
