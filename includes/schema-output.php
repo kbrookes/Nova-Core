@@ -344,9 +344,89 @@ function nova_schema_author_node($author_id) {
  * ------------------------------------------------------------------------- */
 
 /**
+ * Resolve Bricks global class IDs to their registered names.
+ *
+ * Bricks stores applied classes as an array of opaque IDs in
+ * `settings._cssGlobalClasses`. The human-readable names live in the
+ * `bricks_global_classes` option as `[ ['id' => ..., 'name' => ...], ... ]`.
+ *
+ * @return array<string,string> Map of id → name.
+ */
+function nova_schema_bricks_global_class_map() {
+    static $map = null;
+    if ($map === null) {
+        $map = array();
+        $raw = get_option('bricks_global_classes', array());
+        if (is_array($raw)) {
+            foreach ($raw as $entry) {
+                if (!empty($entry['id']) && !empty($entry['name'])) {
+                    $map[ $entry['id'] ] = $entry['name'];
+                }
+            }
+        }
+    }
+    return $map;
+}
+
+/**
+ * Load Bricks element data for a post, trying all known meta keys.
+ *
+ * Bricks has used different meta keys across versions:
+ * - `_bricks_page_content_2`  current key for page/post content
+ * - `_bricks_data`            older versions and template posts
+ *
+ * @param int $post_id Post ID.
+ * @return array|null Decoded element array, or null when not found.
+ */
+function nova_schema_load_bricks_elements($post_id) {
+    foreach (array('_bricks_page_content_2', '_bricks_data') as $key) {
+        $raw = get_post_meta($post_id, $key, true);
+        if (!$raw) {
+            continue;
+        }
+        $elements = is_string($raw) ? json_decode($raw, true) : $raw;
+        if (is_array($elements) && !empty($elements)) {
+            return $elements;
+        }
+    }
+    return null;
+}
+
+/**
+ * Return true when a Bricks element carries the given CSS class name.
+ *
+ * Checks both storage locations:
+ * - `settings._cssGlobalClasses`  array of global class IDs (current Bricks)
+ * - `settings._cssClasses`        plain-text class string (older Bricks)
+ *
+ * @param array  $el         Bricks element array.
+ * @param string $class_name CSS class name to look for.
+ * @return bool
+ */
+function nova_schema_bricks_element_has_class($el, $class_name) {
+    // Global class IDs → look up names via the registry.
+    if (!empty($el['settings']['_cssGlobalClasses']) && is_array($el['settings']['_cssGlobalClasses'])) {
+        $class_map = nova_schema_bricks_global_class_map();
+        foreach ($el['settings']['_cssGlobalClasses'] as $id) {
+            if (isset($class_map[$id]) && $class_map[$id] === $class_name) {
+                return true;
+            }
+        }
+    }
+    // Plain-text class string (fallback for older Bricks or manually typed classes).
+    if (!empty($el['settings']['_cssClasses'])) {
+        $plain = (string) $el['settings']['_cssClasses'];
+        if (in_array($class_name, preg_split('/\s+/', trim($plain)), true)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
  * Extract FAQ pairs from a page's Bricks Builder accordion element.
  *
- * Reads `_bricks_data` and finds `accordion` elements. When multiple
+ * Tries all known Bricks meta keys and item-array keys. When multiple
  * accordions exist, one with the CSS class `nova-faq` is preferred;
  * otherwise the first accordion found is used.
  *
@@ -354,18 +434,13 @@ function nova_schema_author_node($author_id) {
  * @return array Array of [ ['q' => string, 'a' => string], ... ]
  */
 function nova_schema_extract_bricks_faqs($post_id) {
-    $raw = get_post_meta($post_id, '_bricks_data', true);
-    if (!$raw) {
+    $elements = nova_schema_load_bricks_elements($post_id);
+    if ($elements === null) {
         return array();
     }
 
-    $elements = is_string($raw) ? json_decode($raw, true) : $raw;
-    if (!is_array($elements)) {
-        return array();
-    }
-
-    $tagged    = null;
-    $first     = null;
+    $tagged = null;
+    $first  = null;
 
     foreach ($elements as $el) {
         if (!isset($el['name']) || $el['name'] !== 'accordion') {
@@ -374,8 +449,7 @@ function nova_schema_extract_bricks_faqs($post_id) {
         if ($first === null) {
             $first = $el;
         }
-        $classes = isset($el['settings']['_cssClasses']) ? (string) $el['settings']['_cssClasses'] : '';
-        if (strpos($classes, 'nova-faq') !== false) {
+        if (nova_schema_bricks_element_has_class($el, 'nova-faq')) {
             $tagged = $el;
             break;
         }
@@ -386,9 +460,14 @@ function nova_schema_extract_bricks_faqs($post_id) {
         return array();
     }
 
-    $items = isset($accordion['settings']['items']) && is_array($accordion['settings']['items'])
-        ? $accordion['settings']['items']
-        : array();
+    // Bricks stores accordion items under 'accordions' (current) or 'items' (older).
+    $items = array();
+    foreach (array('accordions', 'items') as $key) {
+        if (!empty($accordion['settings'][$key]) && is_array($accordion['settings'][$key])) {
+            $items = $accordion['settings'][$key];
+            break;
+        }
+    }
 
     $faqs = array();
     foreach ($items as $item) {
@@ -412,52 +491,87 @@ function nova_schema_extract_bricks_faqs($post_id) {
  * @return string
  */
 function nova_schema_debug_bricks_extraction($post_id) {
-    $raw = get_post_meta($post_id, '_bricks_data', true);
-    if (!$raw) {
-        return 'No _bricks_data found for this post. The page may use a Bricks content template — try building the FAQ section directly on the page, or see note below.';
+    // Report which meta key was found.
+    $found_key = null;
+    foreach (array('_bricks_page_content_2', '_bricks_data') as $key) {
+        if (get_post_meta($post_id, $key, true)) {
+            $found_key = $key;
+            break;
+        }
+    }
+    if ($found_key === null) {
+        return 'No Bricks data found (_bricks_page_content_2 and _bricks_data are both empty).';
     }
 
-    $elements = is_string($raw) ? json_decode($raw, true) : $raw;
+    $elements = nova_schema_load_bricks_elements($post_id);
     if (!is_array($elements)) {
-        return '_bricks_data exists but is not an array (type: ' . gettype($raw) . '). Cannot extract.';
+        return 'Meta key ' . $found_key . ' exists but could not be decoded as an array.';
     }
 
-    $names     = array();
+    $class_map  = nova_schema_bricks_global_class_map();
+    $names      = array();
     $accordions = array();
+
     foreach ($elements as $el) {
         if (!isset($el['name'])) {
             continue;
         }
         $names[] = $el['name'];
-        if ($el['name'] === 'accordion') {
-            $classes = isset($el['settings']['_cssClasses']) ? (string) $el['settings']['_cssClasses'] : '(none)';
-            $item_count = isset($el['settings']['items']) && is_array($el['settings']['items'])
-                ? count($el['settings']['items']) : 0;
-            $first_item_keys = '';
-            if ($item_count > 0) {
-                $first_item_keys = implode(', ', array_keys((array) $el['settings']['items'][0]));
-            }
-            $accordions[] = sprintf(
-                'id=%s | _cssClasses="%s" | items=%d | first item keys: [%s]',
-                isset($el['id']) ? $el['id'] : '?',
-                $classes,
-                $item_count,
-                $first_item_keys
-            );
+        if ($el['name'] !== 'accordion') {
+            continue;
         }
+
+        // Resolve global class IDs to names.
+        $global_ids    = isset($el['settings']['_cssGlobalClasses']) && is_array($el['settings']['_cssGlobalClasses'])
+            ? $el['settings']['_cssGlobalClasses'] : array();
+        $global_names  = array();
+        foreach ($global_ids as $id) {
+            $global_names[] = isset($class_map[$id]) ? $class_map[$id] : $id;
+        }
+        $plain_classes = isset($el['settings']['_cssClasses']) ? trim((string) $el['settings']['_cssClasses']) : '';
+
+        // Determine which items key is used.
+        $items_key  = null;
+        $item_count = 0;
+        foreach (array('accordions', 'items') as $k) {
+            if (!empty($el['settings'][$k]) && is_array($el['settings'][$k])) {
+                $items_key  = $k;
+                $item_count = count($el['settings'][$k]);
+                break;
+            }
+        }
+        $first_item_keys = '';
+        if ($items_key && $item_count > 0) {
+            $first_item_keys = implode(', ', array_keys((array) $el['settings'][$items_key][0]));
+        }
+
+        $has_nova_faq = nova_schema_bricks_element_has_class($el, 'nova-faq') ? 'YES' : 'no';
+
+        $accordions[] = sprintf(
+            'id=%s | global classes=[%s] | plain classes="%s" | has nova-faq=%s | items key=%s | items=%d | first item keys=[%s]',
+            isset($el['id']) ? $el['id'] : '?',
+            implode(', ', $global_names),
+            $plain_classes ?: '(none)',
+            $has_nova_faq,
+            $items_key ?: '(none)',
+            $item_count,
+            $first_item_keys ?: '(none)'
+        );
     }
 
-    $lines = array();
-    $lines[] = count($elements) . ' elements in _bricks_data.';
-    $lines[] = 'Element types present: ' . (empty($names) ? '(none)' : implode(', ', array_unique($names)));
+    $lines   = array();
+    $lines[] = 'Data from: ' . $found_key . ' (' . count($elements) . ' elements).';
+    $lines[] = 'Element types: ' . (empty($names) ? '(none)' : implode(', ', array_unique($names)));
 
     if (empty($accordions)) {
         $lines[] = 'No accordion elements found.';
     } else {
-        $lines[] = count($accordions) . ' accordion(s) found:';
+        $lines[] = count($accordions) . ' accordion(s):';
         foreach ($accordions as $a) {
             $lines[] = '  ' . $a;
         }
+        $result = nova_schema_extract_bricks_faqs($post_id);
+        $lines[] = 'Extraction result: ' . count($result) . ' FAQ pair(s).';
     }
 
     return implode("\n", $lines);
