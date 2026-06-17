@@ -490,9 +490,6 @@ function nova_schema_extract_bricks_faqs($post_id) {
  *   'faqs'        => [ [ 'q' => ..., 'a' => ... ], ... ],
  * ]
  *
- * When `_nova_schema_faq_auto` is set, FAQ pairs are extracted from the
- * page's Bricks Builder accordion rather than stored meta.
- *
  * @param int $post_id Post ID (falls back to current queried object).
  * @return array
  */
@@ -512,20 +509,6 @@ function nova_schema_get_post_overrides($post_id = 0) {
 
     if (get_post_meta($post_id, NOVA_SCHEMA_META_FAQ_AUTO, true)) {
         $out['faqs'] = nova_schema_extract_bricks_faqs($post_id);
-    } else {
-        $faqs = get_post_meta($post_id, '_nova_schema_faqs', true);
-        if (is_array($faqs)) {
-            foreach ($faqs as $pair) {
-                if (!is_array($pair)) {
-                    continue;
-                }
-                $q = isset($pair['q']) ? nova_schema_clean_text($pair['q']) : '';
-                $a = isset($pair['a']) ? nova_schema_clean_text($pair['a']) : '';
-                if ($q !== '' && $a !== '') {
-                    $out['faqs'][] = array('q' => $q, 'a' => $a);
-                }
-            }
-        }
     }
 
     return $out;

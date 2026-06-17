@@ -30,9 +30,6 @@ if (!defined('NOVA_SCHEMA_META_DISABLED')) {
 if (!defined('NOVA_SCHEMA_META_DESCRIPTION')) {
     define('NOVA_SCHEMA_META_DESCRIPTION', '_nova_schema_description');
 }
-if (!defined('NOVA_SCHEMA_META_FAQS')) {
-    define('NOVA_SCHEMA_META_FAQS', '_nova_schema_faqs');
-}
 if (!defined('NOVA_SCHEMA_META_TYPE')) {
     define('NOVA_SCHEMA_META_TYPE', '_nova_schema_type_override');
 }

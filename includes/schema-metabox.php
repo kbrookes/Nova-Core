@@ -7,7 +7,7 @@
  * Stored meta keys:
  * - _nova_schema_disabled    (1|0) suppress all Nova Schema output for this URL.
  * - _nova_schema_description  string description override.
- * - _nova_schema_faqs         array of [ 'q' => ..., 'a' => ... ] pairs.
+ * - _nova_schema_faq_auto    (1|0) extract FAQ schema from page's Bricks accordion.
  *
  * @package Nova_Core
  */
@@ -108,10 +108,6 @@ function nova_schema_render_metabox($post) {
     $disabled    = (int) get_post_meta($post->ID, '_nova_schema_disabled', true);
     $description = (string) get_post_meta($post->ID, '_nova_schema_description', true);
     $faq_auto    = (bool) get_post_meta($post->ID, NOVA_SCHEMA_META_FAQ_AUTO, true);
-    $faqs        = get_post_meta($post->ID, '_nova_schema_faqs', true);
-    if (!is_array($faqs)) {
-        $faqs = array();
-    }
 
     $detected = nova_schema_detect_for_post($post);
     $label    = nova_schema_type_label($detected);
@@ -162,94 +158,24 @@ function nova_schema_render_metabox($post) {
 
         <div class="nova-schema-faqs" style="margin-top:14px;">
             <p style="margin-bottom:8px;"><strong>FAQ schema</strong></p>
-
-            <label style="display:flex;align-items:flex-start;gap:6px;margin-bottom:8px;">
+            <label style="display:flex;align-items:flex-start;gap:6px;">
                 <input type="checkbox"
                        name="nova_schema_faq_auto"
-                       id="nova-schema-faq-auto"
                        value="1"
                        style="margin-top:3px;"
                        <?php checked(true, $faq_auto); ?>>
                 <span>
                     Auto-extract from Bricks accordion<br>
-                    <span class="description">Reads Q&amp;A pairs from the accordion on this page. If multiple accordions exist, add the CSS class <code>nova-faq</code> to the FAQ one in Bricks Builder.</span>
+                    <span class="description">Reads Q&amp;A pairs from Bricks. Add class <code>nova-faq</code> to FAQ accordion elements to generate schema.</span>
                 </span>
             </label>
-
-            <div id="nova-schema-manual-faqs" <?php echo $faq_auto ? 'style="display:none;"' : ''; ?>>
-                <span class="description" style="display:block;margin-bottom:8px;">
-                    Manual Q+A pairs — leave both blank to discard a row.
-                </span>
-                <div class="nova-schema-faqs-rows">
-                    <?php
-                    $rows = !empty($faqs) ? $faqs : array(array('q' => '', 'a' => ''));
-                    foreach ($rows as $row) :
-                        $q = isset($row['q']) ? $row['q'] : '';
-                        $a = isset($row['a']) ? $row['a'] : '';
-                        ?>
-                        <div class="nova-schema-faq-row" style="border:1px solid #dcdcde;padding:8px;margin-bottom:8px;background:#fafafa;">
-                            <input type="text"
-                                   name="nova_schema_faqs[q][]"
-                                   value="<?php echo esc_attr($q); ?>"
-                                   placeholder="Question"
-                                   style="width:100%;margin-bottom:6px;">
-                            <textarea name="nova_schema_faqs[a][]"
-                                      rows="2"
-                                      placeholder="Answer"
-                                      style="width:100%;"><?php echo esc_textarea($a); ?></textarea>
-                            <p style="margin:6px 0 0;text-align:right;">
-                                <button type="button" class="button-link nova-schema-faq-remove" style="color:#b32d2e;">Remove</button>
-                            </p>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-                <p>
-                    <button type="button" class="button button-secondary nova-schema-faq-add">Add FAQ</button>
-                </p>
-            </div>
         </div>
     </div>
-
-    <script>
-        (function(){
-            var toggle = document.getElementById('nova-schema-faq-auto');
-            var manual = document.getElementById('nova-schema-manual-faqs');
-            if (toggle && manual) {
-                toggle.addEventListener('change', function() {
-                    manual.style.display = this.checked ? 'none' : '';
-                });
-            }
-
-            var wrap = document.querySelector('.nova-schema-faqs');
-            if (!wrap) return;
-            var rows = wrap.querySelector('.nova-schema-faqs-rows');
-            wrap.addEventListener('click', function(e){
-                if (e.target.classList.contains('nova-schema-faq-add')) {
-                    e.preventDefault();
-                    var div = document.createElement('div');
-                    div.className = 'nova-schema-faq-row';
-                    div.setAttribute('style', 'border:1px solid #dcdcde;padding:8px;margin-bottom:8px;background:#fafafa;');
-                    div.innerHTML = '<input type="text" name="nova_schema_faqs[q][]" value="" placeholder="Question" style="width:100%;margin-bottom:6px;">'
-                        + '<textarea name="nova_schema_faqs[a][]" rows="2" placeholder="Answer" style="width:100%;"></textarea>'
-                        + '<p style="margin:6px 0 0;text-align:right;"><button type="button" class="button-link nova-schema-faq-remove" style="color:#b32d2e;">Remove</button></p>';
-                    rows.appendChild(div);
-                }
-                if (e.target.classList.contains('nova-schema-faq-remove')) {
-                    e.preventDefault();
-                    var row = e.target.closest('.nova-schema-faq-row');
-                    if (row) { row.remove(); }
-                }
-            });
-        })();
-    </script>
     <?php
 }
 
 /**
  * Persist Nova Schema metabox values when the post is saved.
- *
- * Skips autosaves, revisions, AJAX, and unauthorised users. Pairs the parallel
- * question/answer arrays back into a row-based structure before storage.
  *
  * @param int $post_id Saved post ID.
  */
@@ -294,31 +220,6 @@ function nova_schema_save_metabox($post_id) {
         update_post_meta($post_id, '_nova_schema_description', $description);
     } else {
         delete_post_meta($post_id, '_nova_schema_description');
-    }
-
-    // FAQ repeater — parallel arrays of questions + answers, paired by index.
-    $faqs = array();
-    if (isset($_POST['nova_schema_faqs']) && is_array($_POST['nova_schema_faqs'])) {
-        $questions = isset($_POST['nova_schema_faqs']['q']) && is_array($_POST['nova_schema_faqs']['q'])
-            ? $_POST['nova_schema_faqs']['q'] : array();
-        $answers = isset($_POST['nova_schema_faqs']['a']) && is_array($_POST['nova_schema_faqs']['a'])
-            ? $_POST['nova_schema_faqs']['a'] : array();
-
-        $count = max(count($questions), count($answers));
-        for ($i = 0; $i < $count; $i++) {
-            $q = isset($questions[$i]) ? sanitize_text_field(wp_unslash($questions[$i])) : '';
-            $a = isset($answers[$i]) ? sanitize_textarea_field(wp_unslash($answers[$i])) : '';
-            if ($q === '' || $a === '') {
-                continue;
-            }
-            $faqs[] = array('q' => $q, 'a' => $a);
-        }
-    }
-
-    if (!empty($faqs)) {
-        update_post_meta($post_id, '_nova_schema_faqs', $faqs);
-    } else {
-        delete_post_meta($post_id, '_nova_schema_faqs');
     }
 }
 
