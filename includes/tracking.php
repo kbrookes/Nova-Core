@@ -40,7 +40,7 @@ function nova_enqueue_tracking_script() {
         'nova-tracking',
         plugin_dir_url(__FILE__) . '../assets/js/tracking.js',
         array(),
-        '1.0.1',
+        '1.0.2',
         true
     );
 

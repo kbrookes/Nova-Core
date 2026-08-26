@@ -1,9 +1,20 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.58** - May 2026
+**Version 0.1.64** - August 2026
 
 ## Recent Version History
+
+### Version 0.1.64 - August 2026
+- Feature/Change: Gate tracking behind document visibility to stop phantom Plausible visitors
+- Status: ✅ Complete
+- Notes:
+  - Bail out of tracking.js entirely when `navigator.webdriver` is true (honest automation)
+  - Wrap all event wiring (IntersectionObserver, click, form, menu listeners) in an `init()` that only arms once the document has been visible
+  - Matches Plausible script.js behaviour, which defers the pageview until visibility, so a never-visible page now sends zero custom events and zero pageviews
+  - Fixes dashboards showing visitors above pageviews and views-per-visit below 1 (headless crawlers were firing custom events without pageviews, minting phantom visitors)
+  - No event names, props, or visible-page timing changed; sites' historical data stays comparable
+  - Bumped tracking.js cache-buster to 1.0.2 so cached/bundled copies refresh
 
 ### Version 0.1.58 - May 2026
 - Feature/Change: Add Build Stage workflow feature
