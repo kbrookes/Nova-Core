@@ -40,7 +40,8 @@ function nova_enqueue_tracking_script() {
         'nova-tracking',
         plugin_dir_url(__FILE__) . '../assets/js/tracking.js',
         array(),
-        '1.0.2',
+        // Cache-bust on every change so CDN/browser caches pick up new releases
+        filemtime(plugin_dir_path(__FILE__) . '../assets/js/tracking.js'),
         true
     );
 

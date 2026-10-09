@@ -1,9 +1,20 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.64** - August 2026
+**Version 0.1.65** - October 2026
 
 ## Recent Version History
+
+### Version 0.1.65 - October 2026
+- Feature/Change: Remove section-view tracking; fix double-counted Plausible events
+- Status: ✅ Complete
+- Notes:
+  - Removed the IntersectionObserver section-view tracking (`Viewed: <section>` and `Viewed Section` events) entirely. Plausible's own script now records scroll depth and time on page natively per page, with no custom events
+  - Section views were ~70% of Zaraz events (Cultivate: 7,600 of 10,800) and exhausted the account-wide monthly allowance mid-month, so GA4 recorded nothing until the 1st (bespokespeakers.net lost 86 of 183 days, May to Aug 2026). They also inflated Plausible event counts and created visits with no pageview
+  - Form submissions and menu clicks were sent to Plausible twice under the same name (a direct `plausible()` call plus `trackEvent()`); now sent once. Plausible event counts for these halve from this release; unique conversions are unaffected
+  - `data-track-inside` / `data-name` still label the section on click and form events
+  - tracking.js cache-buster now uses the file's mtime instead of a hand-bumped string
+  - Plausible goals for `Viewed: …` / `Viewed Section` can be deleted on each site once this is rolled out
 
 ### Version 0.1.64 - August 2026
 - Feature/Change: Gate tracking behind document visibility to stop phantom Plausible visitors
@@ -440,7 +451,7 @@ The build stage is available in the frontend via `novaCoreConfig.buildStage`.
 | Launch checklist dashboard | 🔲 Planned | Developer checklist widget for pre-launch, launch, and post-launch tasks |
 | Form submission tracking | 🔲 Planned | Auto-track Gravity Forms, WPForms, etc. |
 | E-commerce tracking | 🔲 Planned | WooCommerce add to cart, purchase events |
-| Scroll depth tracking | 🔲 Planned | 25%, 50%, 75%, 100% scroll events |
+| Scroll depth tracking | ✅ Native | Recorded by Plausible's script (scroll depth + time on page per page); no custom events |
 
 ### Medium Priority
 | Feature | Status | Notes |
@@ -526,7 +537,6 @@ A dashboard widget for developers to track essential tasks across the site lifec
 ### Next Up
 - Add form submission tracking (Gravity Forms, WPForms)
 - Add WooCommerce event tracking
-- Add scroll depth tracking
 
 ### Backlog
 - Create Bricks template library

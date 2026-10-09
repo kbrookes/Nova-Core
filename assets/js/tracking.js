@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Log init message only in dev mode
     if (isDevMode) {
-      console.log('=== NOVA CORE TRACKING v0.1.64 (DEV MODE) ===');
+      console.log('=== NOVA CORE TRACKING v0.1.65 (DEV MODE) ===');
     }
 
     function getWPPageName() {
@@ -90,54 +90,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function init() {
-      // SCROLL TRACKING
-      const trackedSections = [];
-      const observedSections = document.querySelectorAll(
-        'main > section:not(.no-scroll-track), main > .brxe-template > section:not(.no-scroll-track), footer'
-      );
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const sec = entry.target;
-            const page = getWPPageName();
-
-            // Check if this is a data-track-inside section
-            if (sec.hasAttribute('data-track-inside')) {
-              // Find all elements with data-name inside this section
-              const namedElements = sec.querySelectorAll('[data-name]');
-              namedElements.forEach(namedEl => {
-                const section = namedEl.getAttribute('data-name');
-                if (!trackedSections.includes(section)) {
-                  trackedSections.push(section);
-                  const props = { section, page };
-                  // Send descriptive event name to Plausible for better Goals visibility
-                  const eventName = `Viewed: ${section}`;
-                  if (typeof plausible === 'function') plausible(eventName, { props });
-                  trackEvent('Viewed Section', props);
-                }
-              });
-            } else {
-              // Original behavior for regular sections
-              const section = sec.getAttribute('data-name') ||
-                            sec.getAttribute('id') ||
-                            Array.from(sec.classList).join(' ') ||
-                            'Unnamed Section';
-
-              if (!trackedSections.includes(section)) {
-                trackedSections.push(section);
-                const props = { section, page };
-                // Send descriptive event name to Plausible for better Goals visibility
-                const eventName = `Viewed: ${section}`;
-                if (typeof plausible === 'function') plausible(eventName, { props });
-                trackEvent('Viewed Section', props);
-              }
-            }
-          }
-        });
-      }, { threshold: 0.25 });
-
-      observedSections.forEach(section => observer.observe(section));
+      // Section views are no longer tracked: Plausible's own script records
+      // scroll depth and time on page natively. As custom events they were
+      // ~70% of Zaraz events (exhausting its monthly allowance, which stopped
+      // GA4 mid-month) and inflated Plausible's event counts.
 
       // CLICK TRACKING
       document.querySelectorAll('[data-click], [data-plausible]').forEach(el => {
@@ -178,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function () {
           const page = getWPPageName();
           const props = { section, page };
 
-          if (typeof plausible === 'function') plausible(eventName, { props });
           trackEvent(eventName, props);
         });
       });
@@ -211,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function () {
             location
           };
 
-          if (typeof plausible === 'function') plausible(eventName, { props });
           trackEvent(eventName, props);
         });
       });
