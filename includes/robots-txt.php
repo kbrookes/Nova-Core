@@ -87,15 +87,42 @@ function nova_core_robots_txt($output, $public) {
     }
 
     // Sitemap
-    $sitemap_url = home_url('/sitemap_index.xml');
-    // Check for common sitemap plugins
-    if (function_exists('JERC_STARTER_SITE')) {
-        $sitemap_url = home_url('/sitemap.xml');
-    }
+    $sitemap_url = apply_filters('nova_core_robots_sitemap_url', nova_core_detect_sitemap_url());
     $robots .= "# Sitemap\n";
     $robots .= "Sitemap: {$sitemap_url}\n";
 
     return $robots;
+}
+
+/**
+ * Work out the sitemap index URL from the active SEO plugin
+ *
+ * SEOPress serves /sitemaps.xml, Yoast and Rank Math serve /sitemap_index.xml,
+ * and WordPress core serves /wp-sitemap.xml when no plugin replaces it.
+ */
+function nova_core_detect_sitemap_url() {
+    if (defined('SEOPRESS_VERSION')) {
+        $sitemap_options = get_option('seopress_xml_sitemap_option_name', array());
+        $toggles = get_option('seopress_toggle', array());
+        $sitemap_enabled = isset($sitemap_options['seopress_xml_sitemap_general_enable'])
+            && $sitemap_options['seopress_xml_sitemap_general_enable'] === '1';
+        $toggle_enabled = isset($toggles['toggle-xml-sitemap'])
+            && $toggles['toggle-xml-sitemap'] === '1';
+
+        if ($sitemap_enabled && $toggle_enabled) {
+            return home_url('/sitemaps.xml');
+        }
+    }
+
+    if (defined('WPSEO_VERSION') || defined('RANK_MATH_VERSION')) {
+        return home_url('/sitemap_index.xml');
+    }
+
+    if (function_exists('wp_sitemaps_get_server') && wp_sitemaps_get_server()->sitemaps_enabled()) {
+        return home_url('/wp-sitemap.xml');
+    }
+
+    return home_url('/sitemap.xml');
 }
 
 /**

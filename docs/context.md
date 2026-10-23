@@ -1,9 +1,18 @@
 # Nova Core Plugin - Development Context
 
 ## Current Version
-**Version 0.1.65** - October 2026
+**Version 0.1.66** - October 2026
 
 ## Recent Version History
+
+### Version 0.1.66 - October 2026
+- Feature/Change: robots.txt Sitemap line points at the active SEO plugin's sitemap index
+- Status: ✅ Complete
+- Notes:
+  - Was hard-coded to `/sitemap_index.xml`, which on SEOPress sites only resolved via a 301 to `/sitemaps.xml`
+  - Detection order: SEOPress (XML sitemap enabled) → `/sitemaps.xml`; Yoast or Rank Math → `/sitemap_index.xml`; WP core sitemaps enabled → `/wp-sitemap.xml`; otherwise `/sitemap.xml`
+  - Sites can override with the `nova_core_robots_sitemap_url` filter
+  - Removed the dead `JERC_STARTER_SITE` check (nothing defines that function)
 
 ### Version 0.1.65 - October 2026
 - Feature/Change: Remove section-view tracking; fix double-counted Plausible events
