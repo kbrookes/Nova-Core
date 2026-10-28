@@ -351,6 +351,14 @@ function nova_core_register_settings() {
         'nova_core_tracking_section'
     );
 
+    add_settings_field(
+        'form_map',
+        'Conversion Form Map',
+        'nova_core_form_map_callback',
+        'nova-core-tracking',
+        'nova_core_tracking_section'
+    );
+
     // Feature Toggles
     add_settings_section(
         'nova_core_features_section',
@@ -951,6 +959,15 @@ function nova_core_sanitize_tracking_options($input) {
         $sanitized['build_stage'] = 'content';
     }
 
+    // Conversion form map: free text, parsed line-by-line at read time
+    if (isset($input['form_map'])) {
+        $sanitized['form_map'] = sanitize_textarea_field($input['form_map']);
+    } elseif (isset($existing['form_map'])) {
+        $sanitized['form_map'] = $existing['form_map'];
+    } else {
+        $sanitized['form_map'] = '';
+    }
+
     return $sanitized;
 }
 
@@ -1012,6 +1029,26 @@ function nova_core_environment_callback() {
     <p class="description">
         <strong>Live (Production):</strong> Site is in production mode. Tracking events sent to backends only.<br>
         <strong>Dev (Development):</strong> Site is in development mode. Tracking events also logged to browser console. Admin bar shows warning.
+    </p>
+    <?php
+}
+
+function nova_core_form_map_callback() {
+    $options = get_option('nova_core_tracking_options');
+    $value = isset($options['form_map']) ? $options['form_map'] : '';
+    ?>
+    <textarea name="nova_core_tracking_options[form_map]"
+              id="nova_core_form_map"
+              rows="6"
+              class="large-text code"
+              placeholder="ff-3 = contact&#10;bricks-abc123 = download, Pricing Guide&#10;ff-7 = newsletter"><?php echo esc_textarea($value); ?></textarea>
+    <p class="description">
+        Classifies each conversion form, one per line: <code>identifier = type</code>, where type is
+        <code>contact</code>, <code>download</code> or <code>newsletter</code>. A download takes an optional
+        asset name after a comma. Identifiers: <code>ff-&lt;id&gt;</code> (Fluent Forms),
+        <code>bricks-&lt;element id&gt;</code>, <code>wpforms-&lt;id&gt;</code>, <code>gform-&lt;id&gt;</code>.
+        A <code>data-form-type</code> (and <code>data-asset</code>) attribute on the form overrides this map.
+        <strong>Unlisted forms send no tracking events.</strong> Lines starting with <code>#</code> are comments.
     </p>
     <?php
 }

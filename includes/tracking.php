@@ -1,34 +1,47 @@
 <?php
-// Enqueue the tracking.js script and inject config
+// Enqueue the tracking.js script, inject config, and keep the Plausible WP
+// plugin from double-counting form submissions.
+//
+// Spec: Rapid Site/Plausible/event-survey-2026-10/nova-core-tracking-prompt.md
 
-function nova_get_page_title() {
-    if (is_singular()) {
-        return get_the_title();
-    } elseif (is_home()) {
-        // Check if this is the blog posts page
-        if (get_option('show_on_front') === 'page' && get_option('page_for_posts')) {
-            return get_the_title(get_option('page_for_posts'));
+/**
+ * Parse the per-site conversion form map from settings.
+ *
+ * One form per line: `identifier = type[, asset]` where type is
+ * contact / download / newsletter. Identifiers are plugin-prefixed form ids
+ * as tracking.js computes them: ff-<id>, bricks-<element id>, wpforms-<id>,
+ * gform-<id>. Lines starting with # are comments.
+ *
+ * @return array map of identifier => array{type: string, asset?: string}
+ */
+function nova_core_get_tracking_form_map() {
+    $options = get_option('nova_core_tracking_options');
+    $raw = isset($options['form_map']) ? $options['form_map'] : '';
+    $map = array();
+
+    foreach (preg_split('/[\r\n]+/', (string) $raw) as $line) {
+        $line = trim($line);
+        if ($line === '' || strpos($line, '#') === 0) {
+            continue;
         }
-        return 'Home';
-    } elseif (is_archive()) {
-        // Get the post type or taxonomy archive label
-        if (is_post_type_archive()) {
-            $post_type = get_post_type_object(get_post_type());
-            return $post_type ? $post_type->labels->name : 'Archive';
-        } elseif (is_category() || is_tag() || is_tax()) {
-            $term = get_queried_object();
-            if ($term) {
-                $taxonomy = get_taxonomy($term->taxonomy);
-                return $taxonomy ? $taxonomy->labels->name : 'Archive';
-            }
+        $parts = explode('=', $line, 2);
+        if (count($parts) !== 2) {
+            continue;
         }
-        return 'Archive';
-    } elseif (is_search()) {
-        return 'Search';
-    } elseif (is_404()) {
-        return '404';
+        $identifier = trim($parts[0]);
+        $rhs = array_map('trim', explode(',', $parts[1], 2));
+        $type = strtolower($rhs[0]);
+        if ($identifier === '' || !in_array($type, array('contact', 'download', 'newsletter'), true)) {
+            continue;
+        }
+        $entry = array('type' => $type);
+        if (isset($rhs[1]) && $rhs[1] !== '') {
+            $entry['asset'] = $rhs[1];
+        }
+        $map[$identifier] = $entry;
     }
-    return 'Unknown Page';
+
+    return $map;
 }
 
 add_action('wp_enqueue_scripts', 'nova_enqueue_tracking_script');
@@ -45,42 +58,32 @@ function nova_enqueue_tracking_script() {
         true
     );
 
-    // Pass essential settings to JS
-    $js_config = array(
-        'pageTitle' => nova_get_page_title(),
+    wp_localize_script('nova-tracking', 'novaCoreConfig', array(
         'environment' => $environment,
-        'buildStage' => function_exists('nova_core_get_build_stage') ? nova_core_get_build_stage() : 'content',
-    );
-
-    // Pass settings to JS using wp_localize_script
-    wp_localize_script('nova-tracking', 'novaCoreConfig', $js_config);
+        'formMap'     => nova_core_get_tracking_form_map(),
+    ));
 }
 
-function nova_get_tracking_attributes($element) {
-    $attributes = [];
-    
-    // Check if this element has data-track-inside attribute
-    if ($element->hasAttribute('data-track-inside')) {
-        // Find all elements with data-name inside this element
-        $inner_elements = $element->getElementsByTagName('*');
-        foreach ($inner_elements as $inner) {
-            if ($inner->hasAttribute('data-name')) {
-                $attributes[] = [
-                    'name' => $inner->getAttribute('data-name'),
-                    'type' => 'section'
-                ];
-            }
-        }
-        return $attributes;
+/**
+ * Disable the Plausible WP plugin's form tracking wherever that plugin runs.
+ *
+ * Its "form completions" enhanced measurement sends `WP Form Completions`
+ * (and, in current plugin versions, adds the script-level form-submissions
+ * extension that sends `Form: Submission`). Both duplicate Nova Core's form
+ * events, so the measurement is stripped at option-read time; everything else
+ * (outbound links, file downloads, 404s) is left as configured.
+ *
+ * Sites that embed the Plausible script manually (without the WP plugin) must
+ * drop the form-submissions extension from the script tag by hand.
+ */
+add_filter('option_plausible_analytics_settings', 'nova_core_disable_plausible_form_tracking');
+add_filter('default_option_plausible_analytics_settings', 'nova_core_disable_plausible_form_tracking');
+function nova_core_disable_plausible_form_tracking($settings) {
+    if (!is_array($settings) || empty($settings['enhanced_measurements']) || !is_array($settings['enhanced_measurements'])) {
+        return $settings;
     }
-
-    // Original tracking logic for direct attributes
-    if ($element->hasAttribute('data-name')) {
-        $attributes[] = [
-            'name' => $element->getAttribute('data-name'),
-            'type' => 'section'
-        ];
-    }
-    
-    return $attributes;
+    $settings['enhanced_measurements'] = array_values(
+        array_diff($settings['enhanced_measurements'], array('form-completions'))
+    );
+    return $settings;
 }
