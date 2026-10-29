@@ -59,11 +59,17 @@
     return (text || '').replace(/\s+/g, ' ').trim();
   }
 
+  // Fleet data-name values often carry position prefixes ("1: Hero", "2 - Pitch")
+  // that the spec forbids in section labels.
+  function sectionName(value) {
+    return clean(clean(value).replace(/^\d+\s*[:\-.]\s*/, ''));
+  }
+
   function sectionFor(el) {
     var labelled = el.closest('[data-track-section]');
-    if (labelled) return clean(labelled.getAttribute('data-track-section')) || 'unlabelled';
+    if (labelled) return sectionName(labelled.getAttribute('data-track-section')) || 'unlabelled';
     labelled = el.closest('[data-name]');
-    if (labelled) return clean(labelled.getAttribute('data-name')) || 'unlabelled';
+    if (labelled) return sectionName(labelled.getAttribute('data-name')) || 'unlabelled';
     return 'unlabelled';
   }
 
@@ -246,7 +252,7 @@
 
   function init() {
     if (isDevMode) {
-      console.log('=== NOVA CORE TRACKING v0.2.0 (DEV MODE) ===');
+      console.log('=== NOVA CORE TRACKING v0.2.1 (DEV MODE) ===');
     }
     document.addEventListener('click', onClick);
     wireForms();
